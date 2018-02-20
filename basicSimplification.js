@@ -274,4 +274,4 @@ function simplifyBooleanExpression(parsedExpression) {
 }
 
 // let parsedExpression = parseBooleanExpression("B~~a+~~~~AB+(B+C)");
-// simplifyBooleanExpression(parsedExpression);
+simplifyBooleanExpression(parsedExpression);
