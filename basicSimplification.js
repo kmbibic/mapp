@@ -273,5 +273,5 @@ function simplifyBooleanExpression(parsedExpression) {
     console.log(evaluatedSimplifications);
 }
 
-let parsedExpression = parseBooleanExpression("B~~a+~~~~AB+(B+C)");
-simplifyBooleanExpression(parsedExpression);
+// let parsedExpression = parseBooleanExpression("B~~a+~~~~AB+(B+C)");
+// simplifyBooleanExpression(parsedExpression);
