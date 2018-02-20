@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>    
+    <header>            
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        
+            <!-- Bootstrap CSS -->
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+            
+            <script src="validator.js"></script>
+            <script src="MAPPServer.js"></script>
+            <script src="UserInterface.js"></script>
+            <script src="ExpressionSimplification.js"></script>
+            <link rel="stylesheet" href="style.css">
+            <title>SYDE 322 - Assignment 1</title>
+    </header>
+    <body>
+        <div class="jumbotron">
+            <div class="container">
+                <h1>MAPP</h1>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="alert alert-danger hidden" id="alert">
+                    <a href="#" class="close" onclick="hide('alert')" aria-label="close">&times;</a>
+                    <strong></strong>
+                </div>
+                <div class="form-group">
+                    <input class="form-control" id="expression">
+                </div>
+                <button type="button" class="btn-default" onclick="simplifyExpression()">Submit</button>
+            </div>
+            <div class="row">
+                <div class="hidden well" id="response">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Input</div>
+                        <div class="panel-body" id="input">
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Output</div>
+                        <div class="panel-body" id="output">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
+
