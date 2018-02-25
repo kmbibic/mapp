@@ -92,5 +92,5 @@ function simplifyBooleanExpression(parsedExpression) {
     console.log(evaluatedSimplifications);
 }
 
-let parsedExpression = BooleanExpression.booleanExpressionFromString("B~~a+~~~~AB+(B+C)");
+let parsedExpression = BooleanExpression.booleanExpressionFromString("B~~A+~~~~AB+(B+C)");
 simplifyBooleanExpression(parsedExpression);

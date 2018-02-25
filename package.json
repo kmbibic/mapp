@@ -1,0 +1,25 @@
+{
+  "name": "syde322_assignment2",
+  "version": "1.0.0",
+  "description": "Mathematical Application - binary expression calculator",
+  "dependencies": {
+    "collections": "^5.1.2",
+    "express": "*",
+    "pm2": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "pm2 start ./API/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kmbibic/mapp.git"
+  },
+  "author": "Kaley Bibic & Laura Bingeman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kmbibic/mapp/issues"
+  },
+  "homepage": "https://github.com/kmbibic/mapp#readme"
+}
