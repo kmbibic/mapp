@@ -1,7 +1,7 @@
-var BooleanExpression = require('./BooleanExpression.js');
-
 require("collections/shim-array");
 require("collections/listen/array-changes");
+
+var BooleanExpression = require('../models/BooleanExpression');
 
 const simplificationRules = [
     {
@@ -40,13 +40,13 @@ const simplificationRules = [
     },
     {
         name: "A OR A",
-        regex: /((?<=\+|^)([A-Za-z0-1~]+)\+(\2)(?=\+|$))/,
-        replacement:'$2'
+        regex: /((?<=\+|^)([A-Za-z0-1~]+)(?=\+)([A-Za-z0-1~\+]*)\+(\2)(?=\+|$))/,
+        replacement:'$2$3'
     },
     {
         name: "A AND A",
-        regex: /(?<=\+|^)(?<!~)(~*.)([^\+]*)((?<!~)(\1))(?=\+|$)/,
-        replacement:'$1$2' 
+        regex: /(?<=\+|^)([^\+]*)(?<!~)(~*[^\+])([^\+]*)((?<!~)(\2))([^\+]*)(?=\+|$)/,
+        replacement:'$1$2$6' 
     }, {
         name: "NOT NOT",
         regex: /~{2}/,
@@ -70,7 +70,7 @@ function simplifyAllRules(expression) {
     for (i in simplificationRules) {
         let rule = simplificationRules[i]
         currentExpression = simplifyWithOneRule(currentExpression, rule.regex, rule.replacement)
-        // console.log(currentExpression + " using " + rule.name)
+        console.log(currentExpression + " using " + rule.name)
     }
 
     if (currentExpression == expression) {
@@ -86,11 +86,15 @@ function evaluateSimplification(expression) {
 
 function simplifyBooleanExpression(parsedExpression) {
     var simplifications = []
+    
     let expandedExpression = parsedExpression.expand().toString();
     console.log(expandedExpression);
     let evaluatedSimplifications = evaluateSimplification(expandedExpression);
-    console.log(evaluatedSimplifications);
+    return evaluatedSimplifications;
 }
 
-let parsedExpression = BooleanExpression.booleanExpressionFromString("B~~A+~~~~AB+(B+C)");
-simplifyBooleanExpression(parsedExpression);
+exports.getSimplifiedExpression = function(expression) {
+    console.log(expression);
+    let parsedExpression = BooleanExpression.booleanExpressionFromString(expression);
+    return simplifyBooleanExpression(parsedExpression);
+}

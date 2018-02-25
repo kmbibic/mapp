@@ -3,16 +3,45 @@ var router = express.Router();
 
 var simplification = require('../controllers/simplificationController')
 
-router.get('/results')
-    .get(simplification.calculateResults)
-    .post(simplification.getResults);
+function resultSchema() {
+    return {
+        "result":""
+    }
+}
 
-router.get('/steps')
-    .get(simplification.calculateResults)
-    .post(simplification.getSteps);
+var validation = function(req,res, next) {
+    //validate
+    console.log("Validating");
+    next();
+};
 
-router.get('/truthTable')
-    .get(simplification.calculateResults)
-    .post(simplification.getTruthTable);
+router.use('/:expression', validation);
+
+
+// Routes 
+
+router.get('/:expression/results', function(req, res) {
+    console.log("results");
+    simplification.getSimplifiedExpression(req.params.expression)
+        .then(function(simplifiedExpression){
+            var response = resultSchema()
+            response.result = simplifiedExpression;
+
+            res.send(response);
+        })
+        .catch(err => {
+            console.log("error: " + err);
+        })
+});
+
+router.get('/:expression/steps', function(req, res) {
+    console.log("steps");
+    res.end()
+});
+
+router.get('/:expression/truthTable', function(req, res) {
+    console.log("truthTable");
+    res.end()
+});
 
 module.exports = router;

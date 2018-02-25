@@ -67,11 +67,15 @@ module.exports = class BooleanExpression {
         } else if (!isBooleanE2) {
             return multiplyTerm(expression2, expression1);;
         } else {
-            var newTerm = new BooleanExpression(booleanOperations.OR,[]);
+            var arr = [];
+            
             for (var innerIndex in expression1.terms) {
                 let currentTerm = expression1.terms[innerIndex];
-                newTerm.add(multiplyTerm(currentTerm, expression2));
+                var newTerms = multiplyTerm(currentTerm, expression2);
+                arr = arr.concat(newTerms.terms);
             }
+
+            var newTerm = new BooleanExpression(booleanOperations.OR,arr);
             return newTerm;
         }
     }
@@ -153,9 +157,17 @@ module.exports = class BooleanExpression {
             let element = expressionArray[index];
             if (!(/(\+)|(\()|(\))/).test(element)) {
                 let booleanExpression = new BooleanExpression(element,[]);
+
+                if (precedingValue == true) {
+                    operations.push(booleanOperations.AND);
+                }
+
                 values.push(booleanExpression);
                 precedingValue = true;
             } else if(element == "+") {
+                while(operations.length > 0 && operations.peekBack() == booleanOperations.AND){
+                    applyOpps();
+                }
                 operations.push(booleanOperations.OR);
                 precedingValue = false;
             } else if(element == "(") {
@@ -163,13 +175,13 @@ module.exports = class BooleanExpression {
                     operations.push(booleanOperations.AND);
                 }
                 operations.push("(");
-                precedingValue == false;
+                precedingValue = false;
             } else if(element == ")") {
                 while(!(operations.peekBack() == "(")) {
                     applyOpps();
                 }
                 operations.pop();
-                precedingValue == true;
+                precedingValue = true;
             }
         }
     
