@@ -1,17 +1,26 @@
 var basicSimplificationController = require('../controllers/basicSimplification');
 
-exports.getSimplifiedExpression = function(expression) {
-    console.log("Get results");
+function getSimplifiedExpression(expression) {
+    let newExpression = basicSimplificationController.getSimplifiedExpression(expression);
+    return newExpression;
+}
 
+function getSimplificationSteps(expression) {
+    let steps = basicSimplificationController.getSimplificationSteps(expression);
+    return steps;
+}
+
+exports.getSimplifiedExpression = function(expression) {
     return new Promise((resolve, reject) => {
-        let newExpression = basicSimplificationController.getSimplifiedExpression(expression);
-        console.log(newExpression);
-        return resolve(newExpression);
+        return resolve(getSimplifiedExpression(expression));
     })
 }
 
-exports.getSteps = function(req, res) {
-    console.log("Get steps");
+exports.getSimplificationSteps = function(expression) {
+    return new Promise((resolve, reject) => {
+        let steps = getSimplificationSteps(expression);
+        return resolve(steps);
+    })
 }
 
 exports.getTruthTable = function(req, res) {

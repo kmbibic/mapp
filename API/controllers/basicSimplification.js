@@ -2,6 +2,8 @@ require("collections/shim-array");
 require("collections/listen/array-changes");
 
 var BooleanExpression = require('../models/BooleanExpression');
+var Simplification = require('../models/Simplification');
+var StandardVariableMapper = require('../controllers/StandardVariableMapper');
 
 const simplificationRules = [
     {
@@ -65,36 +67,54 @@ function simplifyWithOneRule(expression, regex, replacement) {
 }
 
 function simplifyAllRules(expression) {
+    var simplifications = [];
     var currentExpression = expression
 
     for (i in simplificationRules) {
         let rule = simplificationRules[i]
-        currentExpression = simplifyWithOneRule(currentExpression, rule.regex, rule.replacement)
-        console.log(currentExpression + " using " + rule.name)
+        let newExpression = simplifyWithOneRule(currentExpression, rule.regex, rule.replacement)
+
+        if (newExpression != currentExpression) {
+            simplifications.push(new Simplification(newExpression, rule.name))
+            currentExpression = newExpression
+        }
     }
 
     if (currentExpression == expression) {
-        return currentExpression
+        return simplifications
     }
     
-    return simplifyAllRules(currentExpression)
+    return simplifications.concat(simplifyAllRules(currentExpression))
 }
 
 function evaluateSimplification(expression) {
     return simplifyAllRules(expression)
 }
 
-function simplifyBooleanExpression(parsedExpression) {
+function simplifyBooleanExpression(expression) {
+    let standardizationSchema = StandardVariableMapper.standardizeExpression(expression);
+    let standardizedExpression = standardizationSchema.expression;
+    let standardizationMap = standardizationSchema.map;
+
+    let parsedExpression = BooleanExpression.booleanExpressionFromString(standardizedExpression);
     var simplifications = []
-    
     let expandedExpression = parsedExpression.expand().toString();
-    console.log(expandedExpression);
     let evaluatedSimplifications = evaluateSimplification(expandedExpression);
+
+    for (var index in evaluatedSimplifications) {
+        var currentElement = evaluatedSimplifications[index];
+        currentElement.value = StandardVariableMapper.unstandardizeExpression(currentElement.value, standardizationMap);
+    }
+
     return evaluatedSimplifications;
 }
 
 exports.getSimplifiedExpression = function(expression) {
-    console.log(expression);
-    let parsedExpression = BooleanExpression.booleanExpressionFromString(expression);
-    return simplifyBooleanExpression(parsedExpression);
+    let simplifedExpression = simplifyBooleanExpression(expression);
+    return simplifedExpression[simplifedExpression.length-1].value;
+}
+
+exports.getSimplificationSteps = function(expression) {
+    let simplifiedExpression = simplifyBooleanExpression(expression);
+    return simplifiedExpression;
 }
