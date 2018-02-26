@@ -8,7 +8,7 @@ var StandardVariableMapper = require('../controllers/StandardVariableMapper');
 const simplificationRules = [
     {
         name: "0 AND A",
-        regex: "/[^\+]*(?<!(?:\$\!))(0)(?!(?:\$\!))[^\+]*/",
+        regex: /[^\+]*(?<!(?:\$\!))(0)(?!(?:\$\!))[^\+]*/,
         replacement: '$1'
     },{
         name: "A AND 1 (A1)",
@@ -27,17 +27,17 @@ const simplificationRules = [
     },
     {
         name: "1 OR A",
-        regex: "/(1)\+(.*)/",
+        regex: /(1)\+(.*)/,
         replacement:'$1'
     },
     {
         name: "A OR 0",
-        regex: "/(.*)\+0/",
+        regex: /(.+)\+(0)/,
         replacement:'$1'
     },
     {
         name: "0 OR A",
-        regex: "/0\+(.*)/",
+        regex: /(0)\+(.+)/,
         replacement:'$1'
     },
     {
@@ -73,7 +73,6 @@ function simplifyAllRules(expression) {
     for (i in simplificationRules) {
         let rule = simplificationRules[i]
         let newExpression = simplifyWithOneRule(currentExpression, rule.regex, rule.replacement)
-
         if (newExpression != currentExpression) {
             simplifications.push(new Simplification(newExpression, rule.name))
             currentExpression = newExpression
@@ -91,7 +90,7 @@ function evaluateSimplification(expression) {
     return simplifyAllRules(expression)
 }
 
-function simplifyBooleanExpression(expression) {
+function simplifyBooleanExpression(expression, withSteps) {
     let standardizationSchema = StandardVariableMapper.standardizeExpression(expression);
     let standardizedExpression = standardizationSchema.expression;
     let standardizationMap = standardizationSchema.map;
@@ -100,21 +99,31 @@ function simplifyBooleanExpression(expression) {
     var simplifications = []
     let expandedExpression = parsedExpression.expand().toString();
     let evaluatedSimplifications = evaluateSimplification(expandedExpression);
+    
+    if (evaluatedSimplifications.length == 0 && withSteps == false) {
+        // no simplification necessary & just want result 
+        return StandardVariableMapper.unstandardizeExpression(expandedExpression, standardizationMap);
+    }
 
     for (var index in evaluatedSimplifications) {
         var currentElement = evaluatedSimplifications[index];
         currentElement.value = StandardVariableMapper.unstandardizeExpression(currentElement.value, standardizationMap);
     }
 
-    return evaluatedSimplifications;
+    if (withSteps) {
+        return evaluatedSimplifications;
+    } else {
+        return evaluatedSimplifications[evaluatedSimplifications.length-1].value;
+    }
+
 }
 
 exports.getSimplifiedExpression = function(expression) {
-    let simplifedExpression = simplifyBooleanExpression(expression);
-    return simplifedExpression[simplifedExpression.length-1].value;
+    let simplifedExpression = simplifyBooleanExpression(expression, false);
+    return simplifedExpression;
 }
 
 exports.getSimplificationSteps = function(expression) {
-    let simplifiedExpression = simplifyBooleanExpression(expression);
+    let simplifiedExpression = simplifyBooleanExpression(expression, true);
     return simplifiedExpression;
 }

@@ -30,7 +30,7 @@ exports.standardizeExpression = function(expression) {
     var inverseMap = {}
     for (var index in expressionArray) {
         let element = expressionArray[index];
-        if (!(/(\+)|(\()|(\))|0|1/).test(element)) {
+        if (!(/(\+)|(\()|(\))|0|1|~/).test(element)) {
             var currentMappedChar = charMap[element];
             if (currentMappedChar == null) {
                 var currentChar = charGenerator.currentChar
@@ -43,15 +43,15 @@ exports.standardizeExpression = function(expression) {
             expressionArray[index] = currentMappedChar;
         }
     }
-
+    console.log(expressionArray);
     return expressionSchema(expressionArray.join(''), inverseMap);
 }
 
 exports.unstandardizeExpression = function(expression, inverseMap) {
-    let expressionArray = expression.match(/([A-Za-z01\~])|(\+)|(\()|(\))/g)
+    let expressionArray = expression.split('')
     for (var index in expressionArray) {
         let element = expressionArray[index];
-        if (!(/(\+)|(\()|(\))|0|1/).test(element)) {
+        if (!(/(\+)|(\()|(\))|0|1|~/).test(element)) {
             expressionArray[index] = inverseMap[element];
         }
     }
