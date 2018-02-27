@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var simplification = require('../controllers/simplificationController')
-// var Validator = require('../controllers/Validator');
+var Validator = require('../controllers/Validator');
 
 var formatExpression = function(expression) {
     return expression.replace(/\s/g, "");
@@ -11,24 +11,24 @@ var formatExpression = function(expression) {
 var validation = function(req,res, next) {
     //validate
     if (req.body == null) {
-        res.status(500).send({error: "No body given"});
+        res.status(500).json({error: "No body given"});
         return
     }
 
     var expression = req.body.expression;
 
     if (expression == "") {
-        res.status(500).send({error: "No expression given"});
+        res.status(500).json({error: "No expression given"});
         return
     }
 
-    // let error = Validator.validateExpression(expression);
-
-    // if (error != null) {
+    let error = Validator.validateExpression(expression);
+    console.log("Error is: " + error);
+    if (error == null) {
         next();
-    // } else {
-    //     res.status(500).send({error: error});
-    // }
+    } else {
+        res.status(500).json({error: error});
+    }
 };
 
 router.use('/', validation);
@@ -39,11 +39,11 @@ router.post('/results', function(req, res) {
 
     simplification.getSimplifiedExpression(expression)
         .then(function(simplifiedExpression){
-            res.send({"expression": simplifiedExpression});
+            res.json({"expression": simplifiedExpression});
         })
         .catch(err => {
             console.log("error: " + err);
-            res.status(500).send({error: "Simplification failed"});
+            res.status(500).json({error: "Simplification failed"});
         })
 });
 
@@ -52,11 +52,11 @@ router.post('/steps', function(req, res) {
 
     simplification.getSimplificationSteps(expression)
         .then(function(steps){
-            res.send({"steps":steps});
+            res.json({"steps":steps});
         })
     .catch(err => {
         console.log("error: " + err);
-        res.status(500).send({error: "Getting steps failed"});
+        res.status(500).json({error: "Getting steps failed"});
     })
 });
 

@@ -54,19 +54,13 @@ app.post('/simplify', function(req, res) {
     axios.all(requests)
         .then(axios.spread(requestFunction))
         .catch((error) => {
-            console.log(error);
-            res.status(500).send(); 
+            console.log(error.data);
+            var errorToSend = {error: "Server error"};
+            if (error.response && error.response.data) {
+                errorToSend = error.response.data;
+            }
+            res.status(500).send(errorToSend); 
         })
-
-    // axios.post(requestURL, requestJSON)
-    //     .then((responseResults) => {
-    //         let result = response.data;
-
-    //         res.end(response.data);
-    //     })
-    //     .catch((error) => {
- 
-    //     });
 })
 
 app.listen(port);

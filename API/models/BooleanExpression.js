@@ -18,7 +18,17 @@ module.exports = class BooleanExpression {
     }
 
     _regularizeValue(value) {
-        return String(value).match(/~*[A-Za-z01]/g).sort().join('')
+        let sortedArray = String(value).match(/~*[A-Za-z01]/g).sort(function(a,b){
+            let aWithoutNots = (a.match(/[^~]/)[0]).charCodeAt(0);
+            let bWithoutNots = (b.match(/[^~]/)[0]).charCodeAt(0);
+
+            if (aWithoutNots == bWithoutNots) {
+                return a.charCodeAt(0)-b.charCodeAt(0);
+            }
+
+            return aWithoutNots-bWithoutNots;
+        });
+        return sortedArray.join('')
     }
 
     isBooleanExpression() {
@@ -139,7 +149,7 @@ module.exports = class BooleanExpression {
     }
 
     static booleanExpressionFromString(stringExpression) {
-        let expressionArray = stringExpression.match(/([A-Za-z01\~]+)|(\+)|(\()|(\))/g); // AB+C [AB,+,C]
+        let expressionArray = stringExpression.match(/([A-Za-z01\~]+)|(\+)|(\()|(\))/g);
         var values = [];
         var operations = []
     
