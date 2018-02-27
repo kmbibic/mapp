@@ -2,7 +2,11 @@ var express = require('express');
 var router = express.Router();
 
 var simplification = require('../controllers/simplificationController')
+// var Validator = require('../controllers/Validator');
 
+var formatExpression = function(expression) {
+    return expression.replace(/\s/g, "");
+}
 
 var validation = function(req,res, next) {
     //validate
@@ -18,21 +22,24 @@ var validation = function(req,res, next) {
         return
     }
 
-    console.log("Validating");
-    next();
+    // let error = Validator.validateExpression(expression);
+
+    // if (error != null) {
+        next();
+    // } else {
+    //     res.status(500).send({error: error});
+    // }
 };
 
 router.use('/', validation);
 
-
 // Routes 
-
 router.post('/results', function(req, res) {
-    var expression = req.body.expression;
+    var expression = formatExpression(req.body.expression);
 
     simplification.getSimplifiedExpression(expression)
         .then(function(simplifiedExpression){
-            res.send(simplifiedExpression);
+            res.send({"expression": simplifiedExpression});
         })
         .catch(err => {
             console.log("error: " + err);
@@ -41,11 +48,11 @@ router.post('/results', function(req, res) {
 });
 
 router.post('/steps', function(req, res) {
-    var expression = req.body.expression;
+    var expression = formatExpression(req.body.expression);
 
     simplification.getSimplificationSteps(expression)
         .then(function(steps){
-            res.send(steps);
+            res.send({"steps":steps});
         })
     .catch(err => {
         console.log("error: " + err);

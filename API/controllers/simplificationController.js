@@ -23,7 +23,3 @@ exports.getSimplificationSteps = function(expression) {
     })
 }
 
-exports.getTruthTable = function(req, res) {
-    console.log("Get truth table");
-}
-

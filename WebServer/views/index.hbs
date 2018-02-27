@@ -13,7 +13,12 @@
             <div class="form-group">
                 <input class="form-control" id="expression">
             </div>
+            <div class="form-check form-check-inline my-1 mr-sm-2">
+                <input class="form-check-input" type="checkbox" id="showSteps">
+                <label class="form-check-label" for="showSteps">Show Steps</label>
+            </div>
             <button type="button" class="btn-default" onclick="simplifyExpression()">Submit</button>
+        
         </div>
         <div class="row">
             <div class="hidden well" id="response">
@@ -25,6 +30,15 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">Output</div>
                     <div class="panel-body" id="output">
+                    </div>
+                </div>
+                <div class="panel panel-default hidden" id="steps">
+                    <div class="panel-heading">Steps</div>
+                    <div class="panel-body">
+                        <table class="table">
+                            <tbody id="stepsBody">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

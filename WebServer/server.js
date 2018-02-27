@@ -14,23 +14,59 @@ app.set('view engine', 'hbs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 
+// Body validations
+app.use('/simplify', function(req, res, next) {
+    // Check that body exists
+    if (req.body == undefined) {
+        res.status(500).send({error: "No expression given"});
+        return;
+    }
+
+    next();
+})
+
 // Homepage
 app.get('/', function(req, res) {
     res.render('index');
 });
 
 app.post('/simplify', function(req, res) {
-    let url = apiURL + "/simplify/results";
-    console.log(req.body);
+    let requestURL = apiURL + "/simplify/results";
+    let stepsURL = apiURL + "/simplify/steps"
 
-    axios.post(url, req.body)
-        .then((response) => {
-            res.end(response.data);
-        })
+    var requestResultFunction = function(response) {
+        res.json(response.data);
+    }
+
+    var requestResultStepsFunction = function(response, steps) {
+        res.json(Object.assign(response.data,steps.data));
+    }
+
+    let requestJSON = {expression: req.body.expression};
+
+    var requests = [axios.post(requestURL, requestJSON)];
+    var requestFunction = requestResultFunction;
+    if (req.body.showSteps == true) {
+        requests.push(axios.post(stepsURL, requestJSON));
+        requestFunction = requestResultStepsFunction;
+    }
+
+    axios.all(requests)
+        .then(axios.spread(requestFunction))
         .catch((error) => {
-            console.log(error.response.data);
-            res.status(500).send(error.response.data);  
-        });
+            console.log(error);
+            res.status(500).send(); 
+        })
+
+    // axios.post(requestURL, requestJSON)
+    //     .then((responseResults) => {
+    //         let result = response.data;
+
+    //         res.end(response.data);
+    //     })
+    //     .catch((error) => {
+ 
+    //     });
 })
 
 app.listen(port);
