@@ -6,17 +6,31 @@ var simplification = require('../controllers/simplificationController')
 
 var validation = function(req,res, next) {
     //validate
+    if (req.body == null) {
+        res.status(500).send({error: "No body given"});
+        return
+    }
+
+    var expression = req.body.expression;
+
+    if (expression == "") {
+        res.status(500).send({error: "No expression given"});
+        return
+    }
+
     console.log("Validating");
     next();
 };
 
-router.use('/:expression', validation);
+router.use('/', validation);
 
 
 // Routes 
 
-router.get('/:expression/results', function(req, res) {
-    simplification.getSimplifiedExpression(req.params.expression)
+router.post('/results', function(req, res) {
+    var expression = req.body.expression;
+
+    simplification.getSimplifiedExpression(expression)
         .then(function(simplifiedExpression){
             res.send(simplifiedExpression);
         })
@@ -26,8 +40,10 @@ router.get('/:expression/results', function(req, res) {
         })
 });
 
-router.get('/:expression/steps', function(req, res) {
-    simplification.getSimplificationSteps(req.params.expression)
+router.post('/steps', function(req, res) {
+    var expression = req.body.expression;
+
+    simplification.getSimplificationSteps(expression)
         .then(function(steps){
             res.send(steps);
         })
@@ -35,11 +51,6 @@ router.get('/:expression/steps', function(req, res) {
         console.log("error: " + err);
         res.status(500).send({error: "Getting steps failed"});
     })
-});
-
-router.get('/:expression/truthTable', function(req, res) {
-    console.log("truthTable");
-    res.end()
 });
 
 module.exports = router;

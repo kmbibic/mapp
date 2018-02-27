@@ -1,9 +1,18 @@
 function simplifyExpression(){
     hide("alert")
     let expression = document.getElementById("expression").value;
-    $.get("/simplify", {expression: expression}, function(data, status) {
-        console.log(data);
-        shownResponse(expression, data);
+
+    $.ajax({
+        type: 'POST',
+        data: JSON.stringify({"expression": expression}),
+        contentType: 'application/json',
+        url: '/simplify',						
+        success: function(data) {
+            shownResponse(expression, data);
+        },
+        error: function(err) {
+            showError(err.responseJSON.error);
+        }
     })
 }
 

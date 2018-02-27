@@ -1,4 +1,5 @@
 var express = require('express');
+var bodyParser = require('body-parser');
 var app = express()
 var port = process.env.PORT || 3000;
 
@@ -7,5 +8,6 @@ var simplify = require('./routes/simplifyRoutes');
 
 app.listen(port);
 
+app.use(bodyParser.json());
 app.use('/simplify', simplify);
 console.log("Running on port " + port);
