@@ -5,81 +5,250 @@ var BooleanExpression = require('../models/BooleanExpression');
 var Simplification = require('../models/Simplification');
 var StandardVariableMapper = require('../controllers/StandardVariableMapper');
 
+var standardRegexReplacement = function(expression, regex, replacement) {
+    return expression.replace(regex,replacement);
+}
+
 const simplificationRules = [
     {
         name: "0 AND A",
-        regex: /[^\+]*(?<!(?:\$\!))(0)(?!(?:\$\!))[^\+]*/,
-        replacement: '$1'
+        method: function(expression) {
+            let regex = /[^\+]*(?<!(?:\$\!))(0)(?!(?:\$\!))[^\+]*/;
+            let replacement = '$1';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     },{
         name: "A AND 1 (A1)",
-        regex: "/([^\+]+)(?<!(?:\$\!))1(?!(?:\$\!))([^\+]*)/",
-        replacement: '$1$2'
+        method: function(expression) {
+            let regex = /([^\+]+)(?<!(?:\$\!))1(?!(?:\$\!))([^\+]*)/;
+            let replacement = '$1$2';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     },
     {
         name: "1 AND A (1A)",
-        regex: /([^\+]*)(?<!(?:\$\!))(1)(?!(?:\$\!))([^\+]+)/,
-        replacement: '$1$2'
+        method: function(expression) {
+            let regex = /([^\+]*)(?<!(?:\$\!))(1)(?!(?:\$\!))([^\+]+)/;
+            let replacement = '$1$2';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     },
     {
         name: "A OR 1",
-        regex: /(?:.*)\+(1)/,
-        replacement:'$1'
+        method: function(expression) {
+            let regex = /(?:.*)\+(1)/;
+            let replacement = '$1';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     },
     {
         name: "1 OR A",
-        regex: /(1)\+(.*)/,
-        replacement:'$1'
+        method: function(expression) {
+            let regex = /(1)\+(.*)/;
+            let replacement = '$1';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     },
     {
         name: "A OR 0",
-        regex: /(.+)\+(0)/,
-        replacement:'$1'
+        method: function(expression) {
+            let regex = /(.+)\+(0)/;
+            let replacement = '$1';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     },
     {
         name: "0 OR A",
-        regex: /(0)\+(.+)/,
-        replacement:'$1'
+        method: function(expression) {
+            let regex = /(0)\+(.+)/;
+            let replacement = '$2';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     },
     {
         name: "A OR A",
-        regex: /((?<=\+|^)([A-Za-z0-1~]+)(?=\+)([A-Za-z0-1~\+]*)\+(\2)(?=\+|$))/,
-        replacement:'$2$3'
+        method: function(expression) {
+            let regex = /((?<=\+|^)([A-Za-z0-1~]+)(?=\+)([A-Za-z0-1~\+]*)\+(\2)(?=\+|$))/;
+            let replacement = '$2$3';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     },
     {
         name: "A AND A",
-        regex: /(?<=\+|^)([^\+]*)(?<!~)(~?[^\+~])([^\+]*)((?<!~)(\2))([^\+]*)(?=\+|$)/,
-        replacement:'$1$2$6' 
+        method: function(expression) {
+            let regex = /(?<=\+|^)([^\+]*)(?<!~)(~?[^\+~])([^\+]*)((?<!~)(\2))([^\+]*)(?=\+|$)/;
+            let replacement = '$1$2$6';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     }, {
         name: "NOT NOT",
-        regex: /~{2}/,
-        replacement:""
+        method: function(expression) {
+            let regex = /~{2}/;
+            let replacement = '';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     }, {
         name: "A NOT A",
-        regex: /((?<!~)([^\+~]))([^\+]*)(~\2)([^\+]*)/,
-        replacement:"0"
+        method: function(expression) {
+            let regex = /((?<!~)([^\+~]))([^\+]*)(~\2)([^\+]*)/;
+            let replacement = '0';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     }, {
         name: "NOT A A",
-        regex: /((?:~)([^\+~]))([^\+]*)(?<!~)(\2)([^\+]*)/,
-        replacement:"0"
+        method: function(expression) {
+            let regex = /((?:~)([^\+~]))([^\+]*)(?<!~)(\2)([^\+]*)/;
+            let replacement = '0';
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     }, {
         name: "AB + ~AB",
-        regex: /((?<=\+|^)(([^\+]*)(?<!~)([^\+~])([^\+]*))(?=\+)([A-Za-z0-1~\+]*)\+(\3)(~\4)(\5)(?=\+|$))/,
-        replacement: "$3$5$6"
+        method: function(expression) {
+            let regex = /((?<=\+|^)(([^\+]*)(?<!~)([^\+~])([^\+]*))(?=\+)([A-Za-z0-1~\+]*)\+(\3)(~\4)(\5)(?=\+|$))/;
+            let replacement = '$3$5$6';
+
+            let regexResult = regex.exec(expression);
+
+            if (regexResult == null) {
+                return expression;
+            }
+
+            if (regexResult[5] == "") {
+                replacement = '0$3$6'
+            }
+
+            return standardRegexReplacement(expression, regex, replacement);
+        }
     }, {
         name: "~AB + AB",
-        regex: /((?<=\+|^)(([^\+]*)(?:~)([^\+~])([^\+]*))(?=\+)([A-Za-z0-1~\+]*)\+(\3)(\4)(\5)(?=\+|$))/,
-        replacement: "$3$5$6"
+        method: function(expression) {
+            let regex = /((?<=\+|^)(([^\+]*)(?:~)([^\+~])([^\+]*))(?=\+)([A-Za-z0-1~\+]*)\+(\3)(\4)(\5)(?=\+|$))/;
+            let replacement = '$3$5$6';
+
+            let regexResult = regex.exec(expression);
+
+            if (regexResult == null) {
+                return expression;
+            }
+
+            if (regexResult[5] == "") {
+                replacement = '0$3$6'
+            }
+
+            return standardRegexReplacement(expression, regex, replacement);
+        }
+    }, {
+        name: "A + AB",
+        method: function(expression) {
+            let terms = expression.match(/([A-Za-z01\~]+)/g)
+
+            for (var i in terms) {
+                let term = terms[i];
+
+                let baseElementTerms = term.match(/~*[A-Za-z01]/g);
+                
+                for (var j in terms) {
+                    if (i == j) {
+                        continue;
+                    }
+
+                    let compareTerm = terms[j]
+                    var foundMatch = true; 
+                    for (var k = 0; k < baseElementTerms.length; k++) {
+                        let regex = new RegExp("(?<!~)"+ baseElementTerms[k]+"");
+                        if (!regex.test(compareTerm)) {
+                            foundMatch = false;
+                            break;
+                        }
+                    }
+
+                    if (foundMatch) {
+                        let newTerms = terms;
+                        newTerms.splice(j,1);
+                        return newTerms.join('+');
+                    }
+                }
+
+
+                // for (var i = 0; i < regex.length; i++) {
+                //     var replacedExpression = expression.replace(regex[i].regex, regex[i].replacement);
+                    
+                //     console.log(expression);
+                //     console.log(regex[i].regex);
+                //     console.log(regex[i].regex.exec(expression));
+
+                //     if (replacedExpression != expression) {
+                //         return replacedExpression;
+                //     }
+                // }
+            }
+            return terms.join('+');
+
+
+            // function createRegex(term){
+            //     let startOfString = "(?<=\+|^)"
+            //     let endOfString = "(?=\+|$)"
+
+            //     let subReplacementTerm = "$CONTAINS"
+
+            //     var regexExpressions = [
+            //         {
+            //             regex:"(?<=\\+|^)("+term+")(?=\\+)(.*)(?:\\+)(?:(?<=\\+)(?:[^\\+]*)"+subReplacementTerm+"(?:[^\\+]*)(?=\\+|$))", 
+            //             replacement:"$1$2"
+            //         }, {
+            //             regex:"(?<=\\+|^)(?:[^\\+]*)"+subReplacementTerm+"(?:[^\\+]*)(?:\\+)(.*)(?<=\\+)("+term+")(?=\\+|$)",
+            //             replacement:"$1$2" 
+            //         }
+            //     ]
+
+            //     let characterContains = "(?=.*(?<!~)$CHAR)"
+
+            //     let findSubtermRegex = ""
+
+            //     let elements = term.match(/~*[A-Za-z01]/g)
+
+            //     for (var index in elements) {
+            //         let element = elements[index];
+            //         findSubtermRegex += characterContains.replace("$CHAR",element);
+            //     }
+
+            //     regexExpressions[0].regex = new RegExp(regexExpressions[0].regex.replace(subReplacementTerm, findSubtermRegex));
+            //     regexExpressions[1].regex = new RegExp(regexExpressions[1].regex.replace(subReplacementTerm, findSubtermRegex));
+
+            //     return regexExpressions
+            // }
+
+            // for (var index in terms) {
+            //     let term = terms[index];
+
+            //     let regex = createRegex(term);
+
+            //     for (var i = 0; i < regex.length; i++) {
+            //         var replacedExpression = expression.replace(regex[i].regex, regex[i].replacement);
+                    
+            //         console.log(expression);
+            //         console.log(regex[i].regex);
+            //         console.log(regex[i].regex.exec(expression));
+
+            //         if (replacedExpression != expression) {
+            //             return replacedExpression;
+            //         }
+            //     }
+            // }
+
+            // return expression;
+        }
     }
 ]
 
-function simplifyWithOneRule(expression, regex, replacement) {
-    var simplifiedExpression = expression.replace(regex,replacement)
+function simplifyWithOneRule(expression, method) {
+    var simplifiedExpression = method(expression)
     
     if (expression == simplifiedExpression) {
         return simplifiedExpression
     }
 
-    return simplifyWithOneRule(simplifiedExpression, regex, replacement)
+    return simplifyWithOneRule(simplifiedExpression, method)
 }
 
 function simplifyAllRules(expression) {
@@ -88,7 +257,7 @@ function simplifyAllRules(expression) {
 
     for (i in simplificationRules) {
         let rule = simplificationRules[i]
-        let newExpression = simplifyWithOneRule(currentExpression, rule.regex, rule.replacement)
+        let newExpression = simplifyWithOneRule(currentExpression, rule.method)
         if (newExpression != currentExpression) {
             simplifications.push(new Simplification(newExpression, rule.name))
             currentExpression = newExpression
