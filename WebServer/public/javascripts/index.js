@@ -1,10 +1,20 @@
 function simplifyExpression(){
     hide("alert")
     hide("steps")
-    let expression = document.getElementById("expression").value;
+
+    var errorHandler = function(error) {
+        showError(error);
+    }
+
+    var expression = document.getElementById("expression").value;
     let showSteps = document.getElementById("showSteps").checked;
 
-    console.log(showSteps);
+    let validatorError = validator.validateExpression(expression)
+
+    if (validatorError) {
+        errorHandler(validatorError);
+        return;
+    }
 
     $.ajax({
         type: 'POST',
@@ -20,7 +30,7 @@ function simplifyExpression(){
             }
         },
         error: function(err) {
-            showError(err.responseJSON.error);
+            errorHandler(err.responseJSON.error);
         }
     })
 }
@@ -78,5 +88,10 @@ function showError(message) {
 
 function hide(id){
     var element = document.getElementById(id)
+
+    if (element == null) {
+        return;
+    }
+    
     element.classList.add("hidden")
 }

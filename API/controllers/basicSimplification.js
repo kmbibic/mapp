@@ -168,75 +168,8 @@ const simplificationRules = [
                         return newTerms.join('+');
                     }
                 }
-
-
-                // for (var i = 0; i < regex.length; i++) {
-                //     var replacedExpression = expression.replace(regex[i].regex, regex[i].replacement);
-                    
-                //     console.log(expression);
-                //     console.log(regex[i].regex);
-                //     console.log(regex[i].regex.exec(expression));
-
-                //     if (replacedExpression != expression) {
-                //         return replacedExpression;
-                //     }
-                // }
             }
             return terms.join('+');
-
-
-            // function createRegex(term){
-            //     let startOfString = "(?<=\+|^)"
-            //     let endOfString = "(?=\+|$)"
-
-            //     let subReplacementTerm = "$CONTAINS"
-
-            //     var regexExpressions = [
-            //         {
-            //             regex:"(?<=\\+|^)("+term+")(?=\\+)(.*)(?:\\+)(?:(?<=\\+)(?:[^\\+]*)"+subReplacementTerm+"(?:[^\\+]*)(?=\\+|$))", 
-            //             replacement:"$1$2"
-            //         }, {
-            //             regex:"(?<=\\+|^)(?:[^\\+]*)"+subReplacementTerm+"(?:[^\\+]*)(?:\\+)(.*)(?<=\\+)("+term+")(?=\\+|$)",
-            //             replacement:"$1$2" 
-            //         }
-            //     ]
-
-            //     let characterContains = "(?=.*(?<!~)$CHAR)"
-
-            //     let findSubtermRegex = ""
-
-            //     let elements = term.match(/~*[A-Za-z01]/g)
-
-            //     for (var index in elements) {
-            //         let element = elements[index];
-            //         findSubtermRegex += characterContains.replace("$CHAR",element);
-            //     }
-
-            //     regexExpressions[0].regex = new RegExp(regexExpressions[0].regex.replace(subReplacementTerm, findSubtermRegex));
-            //     regexExpressions[1].regex = new RegExp(regexExpressions[1].regex.replace(subReplacementTerm, findSubtermRegex));
-
-            //     return regexExpressions
-            // }
-
-            // for (var index in terms) {
-            //     let term = terms[index];
-
-            //     let regex = createRegex(term);
-
-            //     for (var i = 0; i < regex.length; i++) {
-            //         var replacedExpression = expression.replace(regex[i].regex, regex[i].replacement);
-                    
-            //         console.log(expression);
-            //         console.log(regex[i].regex);
-            //         console.log(regex[i].regex.exec(expression));
-
-            //         if (replacedExpression != expression) {
-            //             return replacedExpression;
-            //         }
-            //     }
-            // }
-
-            // return expression;
         }
     }
 ]

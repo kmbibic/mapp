@@ -9,32 +9,33 @@ var formatExpression = function(expression) {
 }
 
 var validation = function(req,res, next) {
-    //validate
     if (req.body == null) {
-        res.status(500).json({error: "No body given"});
+        res.status(400).json({error: "No body given"});
         return
     }
 
     var expression = req.body.expression;
 
     if (expression == "") {
-        res.status(500).json({error: "No expression given"});
+        res.status(400).json({error: "No expression given"});
         return
     }
 
     let error = Validator.validateExpression(expression);
-    console.log("Error is: " + error);
+
     if (error == null) {
         next();
     } else {
-        res.status(500).json({error: error});
+        res.status(400).json({error: error});
     }
 };
 
-router.use('/', validation);
+router.get('/', function(req, res) {
+    
+})
 
 // Routes 
-router.post('/results', function(req, res) {
+router.post('/results', validation, function(req, res) {
     var expression = formatExpression(req.body.expression);
 
     simplification.getSimplifiedExpression(expression)
@@ -43,11 +44,11 @@ router.post('/results', function(req, res) {
         })
         .catch(err => {
             console.log("error: " + err);
-            res.status(500).json({error: "Simplification failed"});
+            res.status(500).json({error: "Server error: Simplification failed"});
         })
 });
 
-router.post('/steps', function(req, res) {
+router.post('/steps', validation, function(req, res) {
     var expression = formatExpression(req.body.expression);
 
     simplification.getSimplificationSteps(expression)
@@ -56,7 +57,7 @@ router.post('/steps', function(req, res) {
         })
     .catch(err => {
         console.log("error: " + err);
-        res.status(500).json({error: "Getting steps failed"});
+        res.status(500).json({error: "Server error: Getting steps failed."});
     })
 });
 

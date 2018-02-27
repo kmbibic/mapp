@@ -43,7 +43,6 @@ exports.standardizeExpression = function(expression) {
             expressionArray[index] = currentMappedChar;
         }
     }
-    console.log(expressionArray);
     return expressionSchema(expressionArray.join(''), inverseMap);
 }
 
