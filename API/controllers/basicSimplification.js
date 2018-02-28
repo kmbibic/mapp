@@ -229,7 +229,7 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
             })
             .catch((err) => {
                 console.log("Database error: " + err);
-                callback(unstandardizeResults(manualFind(standardizedExpression).steps, standardizationMap))
+                callback(unstandardizeResult(manualFind(standardizedExpression).steps, standardizationMap))
             })
     } else {
         DatabaseProxy.getResults(standardizedExpression)
@@ -260,7 +260,7 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
                 console.log(err);
             })
         
-        return result;
+        return result; // do deep copy of object so future motifications don't affect database
     }
 
     function unstandardizeSteps(steps, standardizationMap) {

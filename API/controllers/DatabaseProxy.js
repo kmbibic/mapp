@@ -5,6 +5,10 @@ const DATABASE_FILE_PATH = __dirname+"/../database.json";
 var databaseResultsCache = {};
 var databaseStepsCache = {};
 
+function deepCopy(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
 function getStepsAndResultFromObject(database, expression){
     if (database == {}) {
         return null;
@@ -62,11 +66,13 @@ function storeToCache(expression, steps, result) {
         return;
     }
 
+    let steps_deepCopy = deepCopy(steps); // deep copy of steps so changes to original object don't affect cache
+
     var newElements = {};
     var currentKey = expression;
 
-    for (var i in steps) {
-        let currentStep = steps[i];
+    for (var i in steps_deepCopy) {
+        let currentStep = steps_deepCopy[i];
         // Set result for step
         if (databaseResultsCache[currentKey]) {
             return;
@@ -80,6 +86,8 @@ function storeToCache(expression, steps, result) {
 
     databaseResultsCache[currentKey] = result;
     databaseStepsCache[currentKey] = {};
+    console.log("Store to cache");
+    console.log(databaseStepsCache);
 }
 
 exports.writeToDatabase = function(expression, steps, result) {
@@ -95,6 +103,8 @@ exports.writeToDatabase = function(expression, steps, result) {
         var databaseWriteObj = {};
         var currentKey = expression;
 
+        console.log("Storing to cache from write to database")
+        console.log(steps);
         storeToCache(expression, steps, result);
 
         for (var i in steps) {
@@ -154,7 +164,8 @@ exports.getResults = function(expression){
 exports.getSteps = function(expression){
     return new Promise((resolve, reject) => {
         if (databaseResultsCache[expression]) {
-            resolve(getStepsAndResultFromObject(databaseStepsCache, expression).steps);
+            var responseObject = getStepsAndResultFromObject(databaseStepsCache, expression);
+            resolve(deepCopy(responseObject.steps));
             return;
         }
 
@@ -168,7 +179,9 @@ exports.getSteps = function(expression){
                 // store to cache
                 storeToCache(expression, databaseResponse.steps, databaseResponse.result)
 
-                resolve(databaseResponse.steps);
+                // let responseObject = Object.assign({}, databaseResponse);
+
+                resolve(deepCopy(databaseResponse.steps));
             })
             .catch((err) => {
                 reject(err);
