@@ -8,7 +8,8 @@
     "express": "*",
     "hbs": "*",
     "path": "*",
-    "pm2": "*"
+    "pm2": "*",
+    "jsonfile": "*"
   },
   "devDependencies": {},
   "scripts": {

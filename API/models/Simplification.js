@@ -1,15 +1,15 @@
 module.exports = class Simplification {
-    constructor(value, rule) {
-        this._value = value;
+    constructor(step, rule) {
+        this._step = step;
         this._rule = rule;
     }
 
-    get value(){
-        return this._value;
+    get step(){
+        return this._step;
     }
 
-    set value(value) {
-        this._value = value;
+    set step(step) {
+        this._step = step;
     }
 
     get rule(){
@@ -18,7 +18,7 @@ module.exports = class Simplification {
 
     toJSON() {
         return {
-            step: this.value,
+            step: this.step,
             rule: this.rule
         }
     }

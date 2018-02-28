@@ -1,6 +1,6 @@
 var fs = require("fs");
 
-const DATABASE_FILE_PATH = "/.../database.txt"; // not sure where this will actually be just yet
+const DATABASE_FILE_PATH = "/.../database.json"; // not sure where this will actually be just yet
 
 function storeQueryStepsAndResult(initialQuery, simplificationSteps) {
   var allSteps = simplificationSteps.slice(); // Copy SimplificationSteps so it isn't modified in place (dunno if this is super important)

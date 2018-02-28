@@ -1,0 +1,1 @@
+{"(A+B)(A+B)":{"step":"BB+AB+AA","rule":"A OR A"},"BB+AB+AA":{"step":"B+AB+A","rule":"A AND A"},"B+AB+A":{"step":"B+A","rule":"A + AB"},"B+A":{},"A+B":{},"A+AB+B":{"step":"C+D","rule":"A + AB"},"AA+AB+B":{"step":"C+D+CD","rule":"A AND A"},"A+B+AB":{"step":"C+D","rule":"A + AB"}}
