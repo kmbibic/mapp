@@ -115,7 +115,7 @@ const simplificationRules = [
             }
 
             if (regexResult[5] == "") {
-                replacement = '0$3$6'
+                replacement = '0$3$6';
             }
 
             return standardRegexReplacement(expression, regex, replacement);
@@ -133,7 +133,7 @@ const simplificationRules = [
             }
 
             if (regexResult[5] == "") {
-                replacement = '0$3$6'
+                replacement = '0$3$6';
             }
 
             return standardRegexReplacement(expression, regex, replacement);
@@ -141,20 +141,20 @@ const simplificationRules = [
     }, {
         name: "A + AB",
         method: function(expression) {
-            let terms = expression.match(/([A-Za-z01\~]+)/g)
+            let terms = expression.match(/([A-Za-z01\~]+)/g);
 
             for (var i in terms) {
                 let term = terms[i];
 
                 let baseElementTerms = term.match(/~*[A-Za-z01]/g);
-                
+
                 for (var j in terms) {
                     if (i == j) {
                         continue;
                     }
 
                     let compareTerm = terms[j]
-                    var foundMatch = true; 
+                    var foundMatch = true;
                     for (var k = 0; k < baseElementTerms.length; k++) {
                         let regex = new RegExp("(?<!~)"+ baseElementTerms[k]+"");
                         if (!regex.test(compareTerm)) {
@@ -176,37 +176,37 @@ const simplificationRules = [
 ]
 
 function simplifyWithOneRule(expression, method) {
-    var simplifiedExpression = method(expression)
-    
+    var simplifiedExpression = method(expression);
+
     if (expression == simplifiedExpression) {
-        return simplifiedExpression
+        return simplifiedExpression;
     }
 
-    return simplifyWithOneRule(simplifiedExpression, method)
+    return simplifyWithOneRule(simplifiedExpression, method);
 }
 
 function simplifyAllRules(expression) {
     var simplifications = [];
-    var currentExpression = expression
+    var currentExpression = expression;
 
     for (i in simplificationRules) {
-        let rule = simplificationRules[i]
-        let newExpression = simplifyWithOneRule(currentExpression, rule.method)
+        let rule = simplificationRules[i];
+        let newExpression = simplifyWithOneRule(currentExpression, rule.method);
         if (newExpression != currentExpression) {
-            simplifications.push(new Simplification(newExpression, rule.name))
-            currentExpression = newExpression
+            simplifications.push(new Simplification(newExpression, rule.name));
+            currentExpression = newExpression;
         }
     }
 
     if (currentExpression == expression) {
-        return simplifications
+        return simplifications;
     }
-    
-    return simplifications.concat(simplifyAllRules(currentExpression))
+
+    return simplifications.concat(simplifyAllRules(currentExpression));
 }
 
 function evaluateSimplification(expression) {
-    return simplifyAllRules(expression)
+    return simplifyAllRules(expression);
 }
 
 function simplifyBooleanExpression(expression, withSteps, callback) {
@@ -229,7 +229,7 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
             })
             .catch((err) => {
                 console.log("Database error: " + err);
-                callback(unstandardizeResult(manualFind(standardizedExpression).steps, standardizationMap))
+                callback(unstandardizeResult(manualFind(standardizedExpression).steps, standardizationMap));
             })
     } else {
         DatabaseProxy.getResults(standardizedExpression)
@@ -246,20 +246,19 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
             })
             .catch((err) => {
                 console.log("Database error: " + err);
-                callback(unstandardizeResult(manualFind(standardizedExpression).result, standardizationMap))
+                callback(unstandardizeResult(manualFind(standardizedExpression).result, standardizationMap));
             })
     }
-    
+
     function manualFind(standardizedExpression) {
-        // console.log("Doing manual find");
         let result = findBooleanSimplificationSteps(standardizedExpression);
 
-        DatabaseProxy.writeToDatabase(standardizedExpression, result.steps, result.result)
+        DatabaseProxy.writeToDatabase(standardizedExpression, result.steps, result.result);
             .then((success) => {})
             .catch((err) => {
                 console.log(err);
             })
-        
+
         return result; // do deep copy of object so future motifications don't affect database
     }
 
@@ -278,17 +277,16 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
 
     function findBooleanSimplificationSteps(standardizedExpression) {
         let parsedExpression = BooleanExpression.booleanExpressionFromString(standardizedExpression);
-        var simplifications = []
+        var simplifications = [];
         let expandedExpression = parsedExpression.expand().toString();
         var evaluatedSimplificationSteps = evaluateSimplification(expandedExpression);
         var result = (evaluatedSimplificationSteps.length == 0) ? expandedExpression : evaluatedSimplificationSteps[evaluatedSimplificationSteps.length-1].step;
-        
+
         return {
             steps: evaluatedSimplificationSteps,
             result: result
         }
     }
-
 }
 
 exports.getSimplifiedExpression = function(expression, callback) {
