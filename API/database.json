@@ -1,0 +1,1 @@
+{"AA+BB+CC":{"step":"C+E+D","rule":"A AND A"},"A+C+B":{},"A+B+AB":{"step":"C+D","rule":"A + AB"},"A+B":{}}

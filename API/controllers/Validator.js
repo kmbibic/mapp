@@ -1,19 +1,19 @@
 var checkValidCharacters = function(expression) {
   return !(/[^a-zA-z0-1\+\~\(\)]/.test(expression))
 }
-
+  
 var checkValidLength = function(expression) {
   return expression.length != 0
 }
-
+  
 var checkHangingOperator = function(expression) {
   return !(/((\+){2,}|(^(\+))|((\+|~)$))/.test(expression));
 }
-
+  
 var checkForValidOperation = function(expression) {
   return !(/(~\()|(\~\+)|(\(\+)|(\+\))|(\(\))/.test(expression));
 }
-
+  
 var checkBrackets = function(expression) {
   var currentlyOpenBrackets = 0
 
@@ -35,23 +35,26 @@ var checkBrackets = function(expression) {
 
   return false;
 }
-
+  
 exports.validateExpression = function(expression) {
-  if (!checkValidLength(expression)) {
+  let parsedExpression = expression.replace(/\s/g, "")
+
+  if (!checkValidLength(parsedExpression)) {
     return "Please enter an expression with at least 1 character"
   }
 
-  if (!checkValidCharacters(expression)) {
+  if (!checkValidCharacters(parsedExpression)) {
     return "Please enter an expression with valid characters. Only 0,1, letters, ~, +, ( and ) are allowed."
   }
 
-  if (!checkBrackets(expression)) {
+  if (!checkBrackets(parsedExpression)) {
     return "Please ensure valid allignment of brackets."
   }
 
-  if (!checkHangingOperator(expression)) {
+  if (!checkHangingOperator(parsedExpression)) {
     return "Unable to compute this expression. Ensure the expression has valid operations."
   }
 
   return null
 }
+  
