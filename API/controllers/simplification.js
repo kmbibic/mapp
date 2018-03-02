@@ -253,11 +253,11 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
     function manualFind(standardizedExpression) {
         let result = findBooleanSimplificationSteps(standardizedExpression);
 
-        DatabaseProxy.writeToDatabase(standardizedExpression, result.steps, result.result);
+        DatabaseProxy.writeToDatabase(standardizedExpression, result.steps, result.result)
             .then((success) => {})
             .catch((err) => {
                 console.log(err);
-            })
+            });
 
         return result; // do deep copy of object so future motifications don't affect database
     }

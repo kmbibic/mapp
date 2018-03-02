@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-{"A+B":{},"AA+BBA+CC":{"step":"A+C+AB","rule":"A AND A"},"A+C+AB":{"step":"A+C","rule":"A + AB"},"A+C":{},"A+B+AC":{"step":"A+B","rule":"A + AB"},"A(AB+C)B":{"step":"ADB+AD","rule":"A AND A"},"ABC+AB":{"step":"AD","rule":"A + AB"},"AB":{},"(AB)(AB)":{"step":"AB","rule":"A AND A"},"ABAB":{"step":"AB","rule":"A AND A"}}
-=======
-{"AA+BB+CC":{"step":"C+E+D","rule":"A AND A"},"A+C+B":{},"A+B+AB":{"step":"A+B","rule":"A + AB"},"A+B":{},"A+BB":{"step":"B+A","rule":"A AND A"},"B+A":{},"A+BB+BA+AB":{"step":"A+BB+AB","rule":"A OR A"},"A+BB+AB":{"step":"A+B+AB","rule":"A AND A"},"A+BB+AB+BA":{"step":"A+BB+AB","rule":"A OR A"},"A+AB+AAB":{"step":"A+AB+AB","rule":"A AND A"},"A+AB+AB":{"step":"A","rule":"A + AB"},"A":{}}
->>>>>>> 242a0f7a071fdf1320880bbca815a80e7db706c7
+{"A+B":{},"AA+BBA+CC":{"step":"A+C+AB","rule":"A AND A"},"A+C+AB":{"step":"A+C","rule":"A + AB"},"A+C":{},"A+B+AC":{"step":"A+B","rule":"A + AB"},"A(AB+C)B":{"step":"ADB+AD","rule":"A AND A"},"ABC+AB":{"step":"AD","rule":"A + AB"},"AB":{},"(AB)(AB)":{"step":"AB","rule":"A AND A"},"ABAB":{"step":"AB","rule":"A AND A"},"A+B+C":{}}

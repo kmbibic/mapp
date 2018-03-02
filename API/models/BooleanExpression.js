@@ -13,7 +13,7 @@ const booleanOperations = {
 module.exports = class BooleanExpression {
     constructor(value, terms) {
         this.value = value;
-        this.terms = terms;
+        this.terms = terms; // of type BooleanExpression
     }
 
     get value(){
