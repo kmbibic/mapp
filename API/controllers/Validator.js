@@ -37,21 +37,19 @@ var checkBrackets = function(expression) {
 }
 
 exports.validateExpression = function(expression) {
-  let parsedExpression = expression.replace(/\s/g, "");
-
-  if (!checkValidLength(parsedExpression)) {
+  if (!checkValidLength(expression)) {
     return "Please enter an expression with at least 1 character";
   }
 
-  if (!checkValidCharacters(parsedExpression)) {
+  if (!checkValidCharacters(expression)) {
     return "Please enter an expression with valid characters. Only 0,1, letters, ~, +, ( and ) are allowed.";
   }
 
-  if (!checkBrackets(parsedExpression)) {
+  if (!checkBrackets(expression)) {
     return "Please ensure valid allignment of brackets.";
   }
 
-  if (!checkHangingOperator(parsedExpression)) {
+  if (!checkHangingOperator(expression)) {
     return "Unable to compute this expression. Ensure the expression has valid operations.";
   }
 
