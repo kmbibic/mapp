@@ -14,7 +14,7 @@ var validation = function(req,res, next) {
         return
     }
 
-    var expression = req.body.expression;
+    var expression = formatExpression(req.body.expression);
 
     if (expression == "") {
         res.status(400).json({error: "No expression given"});

@@ -50,15 +50,6 @@ var test_cases = [
 ]
 
 test("getSimplifiedExpression", () => {
-  Expr = new BooleanExpression("A+BB", ["A", "BB"]);
-  var test = function() {
-      for (var i = 0; i < tests.length; i++) {
-          let currentTest = tests[i]
-          console.log(currentTest)
-          let output = MAPPServer.simplifyExpression(currentTest.input)
-
-          expect(output.error != null && currentTest.expectedOutput == output.error || (output.expression == currentTest.expectedOutput))
-      }
   expect(Expr.sum(1, 2)).toBe(3);
 });
 
