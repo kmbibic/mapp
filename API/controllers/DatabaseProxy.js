@@ -1,12 +1,18 @@
 var jsonfile = require('jsonfile');
-
+var SimplificationPrototype = require('../models/SimplificationPrototype')
 const DATABASE_FILE_PATH = __dirname+"/../database.json";
 
 var databaseResultsCache = {};
 var databaseStepsCache = {};
 
-function deepCopy(obj) {
-    return JSON.parse(JSON.stringify(obj));
+function deepCopy(arr) {
+    let newArr = [];
+
+    for (var i in arr) {
+        newArr.push(new SimplificationPrototype(arr[i]).clone());
+    }
+
+    return newArr;
 }
 
 function getStepsAndResultFromObject(database, expression){
