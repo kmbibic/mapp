@@ -1,10 +1,3 @@
-// // FIXME REMOVE THIS START
-// function sum(a, b) {
-//   return a + b;
-// }
-// module.exports = sum;
-// // FIXME REMOVE THIS END
-
 const booleanOperations = {
     AND: 0,
     OR: 1
@@ -45,12 +38,6 @@ module.exports = class BooleanExpression {
             return true;
         }
     }
-
-    // FIXME REMOVE THIS START
-    sum(a, b) {
-      return a + b;
-    }
-    // FIXME REMOVE THIS END
 
     remove(removeTerm) {
         var length = this.terms.length;

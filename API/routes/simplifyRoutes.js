@@ -31,7 +31,21 @@ var validation = function(req,res, next) {
 };
 
 router.get('/', function(req, res) {
-    
+    res.json({
+        "description":"simplify links",
+        "links": [
+            {
+                rel: "self",
+                href: "http://localhost:3000/simplify"
+            },{
+                rel: "results",
+                href: "http://localhost:3000/results"
+            },{
+                rel: "steps",
+                href: "http://localhost:3000/steps"
+            },
+        ]
+    })
 })
 
 // Routes 
