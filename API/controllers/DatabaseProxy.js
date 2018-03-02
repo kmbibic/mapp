@@ -103,8 +103,6 @@ exports.writeToDatabase = function(expression, steps, result) {
         var databaseWriteObj = {};
         var currentKey = expression;
 
-        console.log("Storing to cache from write to database")
-        console.log(steps);
         storeToCache(expression, steps, result);
 
         for (var i in steps) {
@@ -178,8 +176,6 @@ exports.getSteps = function(expression){
 
                 // store to cache
                 storeToCache(expression, databaseResponse.steps, databaseResponse.result)
-
-                // let responseObject = Object.assign({}, databaseResponse);
 
                 resolve(deepCopy(databaseResponse.steps));
             })
