@@ -22,16 +22,17 @@ function getStepsAndResultFromObject(database, expression){
         steps: [],
         result: ""
     };
+
     var currentStep = expression;
 
     while (database[currentStep] && Object.keys(database[currentStep]) != 0) {
         let nextStep = database[currentStep];
         response.steps.push(nextStep);
         currentStep = nextStep.step;
-    } 
+    }
 
     response.result = currentStep;
-    return response; 
+    return response;
 }
 
 function readDatabase() {
@@ -93,7 +94,7 @@ function storeToCache(expression, steps, result) {
 exports.writeToDatabase = function(expression, steps, result) {
     return new Promise((resolve, reject) => {
         // May have some concurrency issues
-        
+
         // Check if already cached -> if already cached, it is in the database or in process of being in the database
         if (databaseResultsCache[expression]) {
             resolve(false);
@@ -175,7 +176,7 @@ exports.getSteps = function(expression){
                 }
 
                 // store to cache
-                storeToCache(expression, databaseResponse.steps, databaseResponse.result)
+                storeToCache(expression, databaseResponse.steps, databaseResponse.result);
 
                 resolve(deepCopy(databaseResponse.steps));
             })
@@ -184,5 +185,3 @@ exports.getSteps = function(expression){
             })
     })
 }
-
-
