@@ -39,10 +39,10 @@ router.get('/', function(req, res) {
                 href: "http://localhost:3000/simplify"
             },{
                 rel: "results",
-                href: "http://localhost:3000/results"
+                href: "http://localhost:3000/simplify/results"
             },{
                 rel: "steps",
-                href: "http://localhost:3000/steps"
+                href: "http://localhost:3000/simplify/steps"
             },
         ]
     })
