@@ -6,7 +6,7 @@ const booleanOperations = {
 module.exports = class BooleanExpression {
     constructor(value, terms) {
         this.value = value;
-        this.terms = terms;
+        this.terms = terms; // of type BooleanExpression
     }
 
     get value(){
@@ -78,7 +78,7 @@ module.exports = class BooleanExpression {
             return multiplyTerm(expression2, expression1);;
         } else {
             var arr = [];
-            
+
             for (var innerIndex in expression1.terms) {
                 let currentTerm = expression1.terms[innerIndex];
                 var newTerms = multiplyTerm(currentTerm, expression2);
@@ -99,7 +99,7 @@ module.exports = class BooleanExpression {
                 let currentTerm = this.terms[i].expand();
 
                 if (currentTerm.isBooleanExpression() && currentTerm.value == this.value) {
-                    // If operation is same as parent, combine 
+                    // If operation is same as parent, combine
                     this.terms = this.terms.concat(currentTerm.terms);
                     this.remove(this.terms[i]);
                     continue;
@@ -139,7 +139,7 @@ module.exports = class BooleanExpression {
                 if (finalString != "") {
                     finalString += prefix
                 }
-                finalString += element.toString() 
+                finalString += element.toString()
             });
         } else {
             finalString += this.value
@@ -152,17 +152,17 @@ module.exports = class BooleanExpression {
         let expressionArray = stringExpression.match(/([A-Za-z01\~]+)|(\+)|(\()|(\))/g);
         var values = [];
         var operations = []
-    
+
         var precedingValue = false;
-    
-        function applyOpps() {
+
+        function applyOps() {
             let operation = operations.pop();
             let val1 = values.pop();
             let val2 = values.pop();
             let booleanExpression = new BooleanExpression(operation,[val1,val2]);
             values.push(booleanExpression);
         }
-    
+
         for (var index in expressionArray) {
             let element = expressionArray[index];
             if (!(/(\+)|(\()|(\))/).test(element)) {
@@ -176,7 +176,7 @@ module.exports = class BooleanExpression {
                 precedingValue = true;
             } else if(element == "+") {
                 while(operations.length > 0 && operations.peekBack() == booleanOperations.AND){
-                    applyOpps();
+                    applyOps();
                 }
                 operations.push(booleanOperations.OR);
                 precedingValue = false;
@@ -188,17 +188,17 @@ module.exports = class BooleanExpression {
                 precedingValue = false;
             } else if(element == ")") {
                 while(!(operations.peekBack() == "(")) {
-                    applyOpps();
+                    applyOps();
                 }
                 operations.pop();
                 precedingValue = true;
             }
         }
-    
+
         while (operations.length > 0) {
-            applyOpps()
+            applyOps()
         }
-    
+
         return values[0];
     }
 }

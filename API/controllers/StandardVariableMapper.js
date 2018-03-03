@@ -1,10 +1,10 @@
-const unmappedVariableRegex = /(\+)|(\()|(\))|0|1|~/ 
+const unmappedVariableRegex = /(\+)|(\()|(\))|0|1|~/;
 
 function expressionSchema(expression, map){
     return {
         expression: expression,
         map: map
-    }
+    };
 }
 
 class CharGenerator {
@@ -21,28 +21,28 @@ class CharGenerator {
         const firstLowerCaseCharCode = 97;
 
         this._currentChar += 1;
-        
+
         if (this._currentChar == lastUpperCaseCharCode) { //point at which it jumps from upper case to lower case
-            this._currentChar = firstLowerCaseCharCode; 
+            this._currentChar = firstLowerCaseCharCode;
         }
     }
 }
 
 exports.standardizeExpression = function(expression) {
-    let expressionArray = expression.split('') // Seperate into individual terms 
+    let expressionArray = expression.split(''); // Seperate into individual terms
     var charGenerator = new CharGenerator();
     var charMap = {};
-    var inverseMap = {}
+    var inverseMap = {};
     for (var index in expressionArray) {
         let element = expressionArray[index];
         if (!unmappedVariableRegex.test(element)) {
             var currentMappedChar = charMap[element];
             if (currentMappedChar == null) {
-                var currentChar = charGenerator.currentChar
+                var currentChar = charGenerator.currentChar;
                 charMap[element] = currentChar;
-                inverseMap[currentChar] = element; 
+                inverseMap[currentChar] = element;
                 currentMappedChar = currentChar;
-                charGenerator.next()
+                charGenerator.next();
             }
 
             expressionArray[index] = currentMappedChar;
@@ -52,7 +52,7 @@ exports.standardizeExpression = function(expression) {
 }
 
 exports.unstandardizeExpression = function(expression, inverseMap) {
-    let expressionArray = expression.split('')
+    let expressionArray = expression.split('');
     for (var index in expressionArray) {
         let element = expressionArray[index];
         if (!unmappedVariableRegex.test(element)) {

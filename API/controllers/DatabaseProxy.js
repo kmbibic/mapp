@@ -1,12 +1,18 @@
 var jsonfile = require('jsonfile');
-
+var SimplificationPrototype = require('../models/SimplificationPrototype')
 const DATABASE_FILE_PATH = __dirname+"/../database.json";
 
 var databaseResultsCache = {};
 var databaseStepsCache = {};
 
-function deepCopy(obj) {
-    return JSON.parse(JSON.stringify(obj));
+function deepCopy(arr) {
+    let newArr = [];
+
+    for (var i in arr) {
+        newArr.push(new SimplificationPrototype(arr[i]).clone());
+    }
+
+    return newArr;
 }
 
 function getStepsAndResultFromObject(database, expression){
@@ -22,16 +28,17 @@ function getStepsAndResultFromObject(database, expression){
         steps: [],
         result: ""
     };
+
     var currentStep = expression;
 
     while (database[currentStep] && Object.keys(database[currentStep]) != 0) {
         let nextStep = database[currentStep];
         response.steps.push(nextStep);
         currentStep = nextStep.step;
-    } 
+    }
 
     response.result = currentStep;
-    return response; 
+    return response;
 }
 
 function readDatabase() {
@@ -93,7 +100,7 @@ function storeToCache(expression, steps, result) {
 exports.writeToDatabase = function(expression, steps, result) {
     return new Promise((resolve, reject) => {
         // May have some concurrency issues
-        
+
         // Check if already cached -> if already cached, it is in the database or in process of being in the database
         if (databaseResultsCache[expression]) {
             resolve(false);
@@ -103,8 +110,6 @@ exports.writeToDatabase = function(expression, steps, result) {
         var databaseWriteObj = {};
         var currentKey = expression;
 
-        console.log("Storing to cache from write to database")
-        console.log(steps);
         storeToCache(expression, steps, result);
 
         for (var i in steps) {
@@ -177,9 +182,7 @@ exports.getSteps = function(expression){
                 }
 
                 // store to cache
-                storeToCache(expression, databaseResponse.steps, databaseResponse.result)
-
-                // let responseObject = Object.assign({}, databaseResponse);
+                storeToCache(expression, databaseResponse.steps, databaseResponse.result);
 
                 resolve(deepCopy(databaseResponse.steps));
             })
@@ -188,5 +191,3 @@ exports.getSteps = function(expression){
             })
     })
 }
-
-
