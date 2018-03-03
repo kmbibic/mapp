@@ -39,7 +39,7 @@ const SimplificationRules = [
     },{
         name: "A AND 1 (A1)",
         method: function(expression) {
-            let regex = /([^\+]+)(?<!(?:\$\!))1(?!(?:\$\!))([^\+]*)/;
+            let regex = /([^\+]+)1([^\+]*)/;
             let replacement = '$1$2';
             return standardRegexReplacement(expression, regex, replacement);
         }
@@ -47,7 +47,7 @@ const SimplificationRules = [
     {
         name: "1 AND A (1A)",
         method: function(expression) {
-            let regex = /([^\+]*)(?<!(?:\$\!))(1)(?!(?:\$\!))([^\+]+)/;
+            let regex = /([^\+]*)1([^\+]+)/;
             let replacement = '$1$2';
             return standardRegexReplacement(expression, regex, replacement);
         }
