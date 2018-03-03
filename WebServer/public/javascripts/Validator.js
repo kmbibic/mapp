@@ -55,6 +55,10 @@ var validator = ( function() {
                 return "Unable to compute this expression. Ensure the expression has valid operations."
             }
 
+            if (!checkForValidOperation(expression)) {
+                return "Please enter a valid operation. Note that this program doesn't support ~()";
+            }
+
             return null
         }
     }
