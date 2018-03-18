@@ -1,5 +1,5 @@
 var checkValidCharacters = function(expression) {
-  return !(/[^a-zA-z0-1\+\~\(\)]/.test(expression));
+  return !(/[^a-zA-z0-1\s\+\~\(\)]/.test(expression));
 }
 
 var checkValidLength = function(expression) {

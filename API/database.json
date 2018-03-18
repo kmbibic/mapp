@@ -1,1 +1,1 @@
-{"1":{},"1A":{"step":"A","rule":"1 AND A (1A)"},"A":{},"1A1":{"step":"1A","rule":"A AND 1 (A1)"},"1A1+B":{"step":"B+1A","rule":"A AND 1 (A1)"},"B+1A":{"step":"B+A","rule":"1 AND A (1A)"},"B+A":{}}
+{}
