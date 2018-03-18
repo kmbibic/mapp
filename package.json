@@ -9,7 +9,10 @@
     "hbs": "*",
     "path": "*",
     "pm2": "*",
-    "jsonfile": "*"
+    "jsonfile": "*",
+    "jsonwebtoken": "*",
+    "passport": "*",
+    "passport-local": "*"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
