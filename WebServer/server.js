@@ -1,18 +1,37 @@
 var express = require("express");
+
+// https imports
+var https = require('https');
+var http = require('http');
+var forceSsl = require('express-force-ssl');
+
 var path = require('path');
 var hbs = require('hbs');
 var app = express();
 var axios = require('axios');
 var bodyParser = require('body-parser');
+var fs = require('fs');
 
 var port = process.env.port || 4000;
 
-var apiURL = "http://localhost:3000"
+// setup HTTPS
+var key = fs.readFileSync('encryption/private.key');
+var cert = fs.readFileSync( 'encryption/primary.crt' );
+var ca = fs.readFileSync( 'encryption/intermediate.crt' );
+var options = {
+    key: key,
+    cert: cert,
+    ca: ca
+  };
+
+
+var apiURL = "https://localhost:3000"
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
+app.use(forceSsl);
 
 // Body validations
 app.use('/simplify', function(req, res, next) {
@@ -23,6 +42,10 @@ app.use('/simplify', function(req, res, next) {
     }
 
     next();
+})
+
+app.post('/login', function(req, res, next) {
+
 })
 
 // Homepage
@@ -63,4 +86,5 @@ app.post('/simplify', function(req, res) {
         })
 })
 
-app.listen(port);
+https.createServer(options, app).listen(port)
+http.createServer(app).listen(port+1);

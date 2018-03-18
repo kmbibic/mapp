@@ -4,6 +4,11 @@ var router = express.Router();
 var simplification = require('../controllers/simplificationController')
 var Validator = require('../controllers/Validator');
 
+var Visitor = require('../authentication/Visitor')
+var Nodes = require('../authentication/LockedDataNode')
+var LockedStepsNode = Nodes.LockedStepsNode
+var LockedSimplifyNode = Nodes.LockedSimplifyNode
+
 var formatExpression = function(expression) {
     return expression.replace(/\s/g, "");
 }
@@ -30,6 +35,22 @@ var validation = function(req,res, next) {
     }
 };
 
+var stepsValidation = function(req, res, next) {
+    let node = LockedStepsNode(res, next);
+    let visitor = new Visitor();
+    let userCredentials = req.user;
+
+    node.accept(visitor, userCredentials);
+}
+
+var simplifyValidation = function(req, res, next) {
+    let node = LockedSimplifyNode(res, next);
+    let visitor = Visitor();
+    let userCredentials = req.user;
+
+    node.accept(visitor, userCredentials);
+}
+
 router.get('/', function(req, res) {
     res.json({
         "description":"simplify links",
@@ -49,7 +70,7 @@ router.get('/', function(req, res) {
 })
 
 // Routes 
-router.post('/results', validation, function(req, res) {
+router.post('/results', simplifyValidation, validation, function(req, res) {
     var expression = formatExpression(req.body.expression);
 
     simplification.getSimplifiedExpression(expression)
@@ -62,7 +83,7 @@ router.post('/results', validation, function(req, res) {
         })
 });
 
-router.post('/steps', validation, function(req, res) {
+router.post('/steps', stepsValidation, validation, function(req, res) {
     var expression = formatExpression(req.body.expression);
 
     simplification.getSimplificationSteps(expression)

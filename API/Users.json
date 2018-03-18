@@ -1,0 +1,14 @@
+{
+    "superuser": {
+        "id": "superuser",
+        "username": "superuser",
+        "password": "pass4242",
+        "premium": true
+    },
+    "freeUser": {
+        "id": "freeUser",
+        "username": "freeUser",
+        "password": "pass4242",
+        "premium": false
+    }
+}
