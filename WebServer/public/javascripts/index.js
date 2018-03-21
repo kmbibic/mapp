@@ -2,17 +2,13 @@ function simplifyExpression(){
     hide("alert")
     hide("steps")
 
-    var errorHandler = function(error) {
-        showError(error);
-    }
-
     var expression = document.getElementById("expression").value;
     let showSteps = document.getElementById("showSteps").checked;
 
     let validatorError = validator.validateExpression(expression)
 
     if (validatorError) {
-        errorHandler(validatorError);
+        showErrorMessage(validatorError);
         return;
     }
 
@@ -22,15 +18,11 @@ function simplifyExpression(){
         contentType: 'application/json',
         url: '/simplify',						
         success: function(data) {
-            console.log(data);
             shownResponse(expression, data.expression);
 
             if (showSteps) {
                 shownSteps(expression, data.steps);
             }
-        },
-        error: function(err) {
-            errorHandler(err.responseJSON.error);
         }
     })
 }
@@ -75,23 +67,4 @@ function shownSteps(input,steps) {
     if (stepsWell.classList.contains("hidden")) {
         stepsWell.classList.remove("hidden")
     }
-}
-
-// These are user interface methods
-function showError(message) {
-    var errorMessage = document.getElementById("alert")
-    errorMessage.querySelector("strong").innerHTML = message
-    errorMessage.classList.remove("hidden");
-    hide("response")
-    hide("stepsWell")
-}
-
-function hide(id){
-    var element = document.getElementById(id)
-
-    if (element == null) {
-        return;
-    }
-    
-    element.classList.add("hidden")
 }

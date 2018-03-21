@@ -1,0 +1,28 @@
+<body>
+    <script src='/javascripts/login.js'></script>
+    <script src='/javascripts/loginErrorHandling.js'></script>
+    <div class="jumbotron">
+        <div class="container">
+            <h1>MAPP</h1>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <div class="alert alert-danger hidden" id="alert">
+                    <a href="#" class="close" onclick="hide('alert')" aria-label="close">&times;</a>
+                    <strong></strong>
+                </div>
+                {{!-- modified from view-source:https://getbootstrap.com/docs/4.0/examples/sign-in/ --}}
+                <div class="form-group form-signin">                    
+                    <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+                    <label for="inputUsername" class="sr-only">Username</label>
+                    <input type="username" id="inputUsername" class="form-control" placeholder="Username" required autofocus>
+                    <label for="inputPassword" class="sr-only">Password</label>
+                    <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+                    <button class="btn btn-lg btn-primary btn-block" onclick="login()">Sign in</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>

@@ -13,7 +13,7 @@ var LockedSimplifyNode = function(res, nextCall) {
 
     let accept = (visitor, credentials) => {
         // all users allowed to use this
-        visitor.visitSimplifyNode(unlock())
+        visitor.visitSimplifiedNode(unlock())
     }
 
     return {
@@ -41,7 +41,7 @@ var LockedStepsNode = function(res, nextCall) {
     let accept = (visitor, credentials) => {
         // all users allowed to use this
         if (checkCredentials(credentials)) {
-            visitor.visitSimplifiedNode(unlock())
+            visitor.visitStepsNode(unlock())
         } else {
             visitor.visitUnauthorizeNode(self)
         }

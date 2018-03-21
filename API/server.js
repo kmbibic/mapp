@@ -19,8 +19,9 @@ var users = require('./Users.json');
 var jwtOptions = {}
 jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 jwtOptions.secretOrKey = "syde322IsAwesome4242"
+jwtOptions.expiresIn = "15m"
 
-var strategy = new JwtStrategy(jwtOptions, (jwtPayload, next) => {
+var jwtStrategy = new JwtStrategy(jwtOptions, (jwtPayload, next) => {
     // add database here 
     var user = users[jwtPayload.id];
 
@@ -30,13 +31,12 @@ var strategy = new JwtStrategy(jwtOptions, (jwtPayload, next) => {
         next(null, false);
     }
 });
-
-passport.use(strategy);
+passport.use(jwtStrategy);
 app.use(passport.initialize());
 
 // ROUTES
 var simplify = require('./routes/simplifyRoutes');
-var authentication = require('./routes/authenticate')(jwtOptions);
+var authentication = require('./routes/authenticate')(passport, jwtOptions, passport.authenticate('jwt', {session: false}));
 
 app.listen(port);
 
@@ -54,8 +54,8 @@ app.get('/', (req, res) => {
                 href: "http://localhost:3000" 
             },
             {
-                rel: "authenticate",
-                href: "http://localhost:3000/authenticate" 
+                rel: "login",
+                href: "http://localhost:3000/authenticate/login" 
             }
         ]
     })

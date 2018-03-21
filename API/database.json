@@ -1,1 +1,1 @@
-{"AA+B+C":{"step":"A+C+B","rule":"A AND A"},"A+C+B":{}}
+{"AA+B+C":{"step":"A+C+B","rule":"A AND A"},"A+C+B":{},"A+BB":{"step":"B+A","rule":"A AND A"},"B+A":{},"AA+B":{"step":"B+A","rule":"A AND A"},"AA+B+C+D":{"step":"A+B+D+C","rule":"A AND A"},"A+B+D+C":{},"AA+B+CC+A(A+B)":{"step":"AA+B+CC+AB","rule":"A OR A"},"AA+B+CC+AB":{"step":"A+B+C+AB","rule":"A AND A"},"A+B+C+AB":{"step":"A+B+C","rule":"A + AB"},"A+B+C":{}}

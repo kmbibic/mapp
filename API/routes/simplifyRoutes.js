@@ -45,7 +45,7 @@ var stepsValidation = function(req, res, next) {
 
 var simplifyValidation = function(req, res, next) {
     let node = LockedSimplifyNode(res, next);
-    let visitor = Visitor();
+    let visitor = new Visitor();
     let userCredentials = req.user;
 
     node.accept(visitor, userCredentials);
