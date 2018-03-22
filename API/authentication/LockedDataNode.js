@@ -48,7 +48,7 @@ var LockedStepsNode = function(res, nextCall) {
     }
 
     let next = () => {
-        res.status(401).json({
+        res.status(403).json({
             message: "user not authorized to use this service"
         })
     }

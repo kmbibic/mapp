@@ -125,7 +125,7 @@ var verifyAuthorization = (req, res, next) => {
             res.clearCookie(COOKIE_ACCESS_TOKEN);
             res.clearCookie(COOKIE_REFRESH_TOKEN);
             if (req.method == "POST") {
-                res.status(500).send({
+                res.status(403).send({
                     redirect: true,
                     redirectURL: '/login'
                 })
@@ -189,7 +189,7 @@ app.post('/login', (req, res) => {
             res.cookie(COOKIE_REFRESH_TOKEN, user.refreshToken);
             res.redirect('/');
         } else {
-            res.status(401).json({
+            res.status(400).json({
                 error: "Incorrect username or password"
             })
         }

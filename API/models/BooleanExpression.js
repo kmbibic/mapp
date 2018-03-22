@@ -1,3 +1,15 @@
+const REMOVE_NOT = /[^~]/
+const SEPERATE_INTO_ELEMENTS = /~*[A-Za-z01]/g
+const SEPERATE_INTO_CHARACTERS = /([A-Za-z01\~]+)|(\+)|(\()|(\))/g
+const IS_OPERATION = /(\+)|(\()|(\))/
+
+const Operator = {
+    "OR": "+",
+    "OpenBracket": "(",
+    "CloseBracket": ")",
+    "AND": ""
+}
+
 const booleanOperations = {
     AND: 0,
     OR: 1
@@ -18,9 +30,13 @@ module.exports = class BooleanExpression {
     }
 
     _regularizeValue(value) {
-        let sortedArray = String(value).match(/~*[A-Za-z01]/g).sort(function(a,b){
-            let aWithoutNots = (a.match(/[^~]/)[0]).charCodeAt(0);
-            let bWithoutNots = (b.match(/[^~]/)[0]).charCodeAt(0);
+        let sortedArray = String(value).match(SEPERATE_INTO_ELEMENTS).sort(function(a,b){
+            function _removeNotFromCharacter(character) {
+                return (character.match(REMOVE_NOT)[0]).charCodeAt(0)
+            }
+            
+            let aWithoutNots = _removeNotFromCharacter(a);
+            let bWithoutNots = _removeNotFromCharacter(b);
 
             if (aWithoutNots == bWithoutNots) {
                 return a.charCodeAt(0)-b.charCodeAt(0);
@@ -133,10 +149,10 @@ module.exports = class BooleanExpression {
     toString() {
         var finalString = "";
         if (this.isBooleanExpression()) {
-            let prefix = this.value == booleanOperations.AND ? "" : "+";
+            let prefix = this.value == booleanOperations.AND ? Operator.AND : Operator.OR;
 
             this.terms.forEach(element => {
-                if (finalString != "") {
+                if (finalString) {
                     finalString += prefix
                 }
                 finalString += element.toString()
@@ -149,7 +165,7 @@ module.exports = class BooleanExpression {
     }
 
     static booleanExpressionFromString(stringExpression) {
-        let expressionArray = stringExpression.match(/([A-Za-z01\~]+)|(\+)|(\()|(\))/g);
+        let expressionArray = stringExpression.match(SEPERATE_INTO_CHARACTERS);
         var values = [];
         var operations = []
 
@@ -165,7 +181,7 @@ module.exports = class BooleanExpression {
 
         for (var index in expressionArray) {
             let element = expressionArray[index];
-            if (!(/(\+)|(\()|(\))/).test(element)) {
+            if (!(IS_OPERATION).test(element)) {
                 let booleanExpression = new BooleanExpression(element,[]);
 
                 if (precedingValue == true) {
@@ -174,20 +190,20 @@ module.exports = class BooleanExpression {
 
                 values.push(booleanExpression);
                 precedingValue = true;
-            } else if(element == "+") {
+            } else if(element == Operator.OR) {
                 while(operations.length > 0 && operations.peekBack() == booleanOperations.AND){
                     applyOps();
                 }
                 operations.push(booleanOperations.OR);
                 precedingValue = false;
-            } else if(element == "(") {
+            } else if(element == Operator.OpenBracket) {
                 if (precedingValue == true) {
                     operations.push(booleanOperations.AND);
                 }
-                operations.push("(");
+                operations.push(Operator.OpenBracket);
                 precedingValue = false;
-            } else if(element == ")") {
-                while(!(operations.peekBack() == "(")) {
+            } else if(element == Operator.CloseBracket) {
+                while(!(operations.peekBack() == Operator.OpenBracket)) {
                     applyOps();
                 }
                 operations.pop();

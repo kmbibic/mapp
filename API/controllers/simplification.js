@@ -1,5 +1,4 @@
 require("collections/shim-array");
-require("collections/listen/array-changes");
 
 var BooleanExpression = require('../models/BooleanExpression');
 var Simplification = require('../models/Simplification');
