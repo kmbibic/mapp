@@ -2,7 +2,6 @@ var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken');
 var LocalStrategy = require('passport-local').Strategy;
-var users = require('./../Users.json');
 var CryptoJS = require("crypto-js");
 var randtoken = require('rand-token');
 var DatabaseProxy = require('./../controllers/DatabaseProxy');
@@ -14,6 +13,16 @@ var refreshTokens = {}
 
 module.exports = function(passport, jwtOptions, authentication) {
     // login strategy
+    // function encryptPassword(password) {
+    //     return CryptoJS.AES.encrypt(password, SECRET_KEY).toString();
+    // }
+
+    function decryptPassword(cipherText) {
+        // let parsedText = CryptoJS.enc.Base64.parse(cipherText)
+        let decryptedText = CryptoJS.AES.decrypt(cipherText, SECRET_KEY).toString(CryptoJS.enc.Utf8);
+        return decryptedText;
+    }
+
     passport.use(new LocalStrategy({
             session: false
         },
@@ -21,22 +30,16 @@ module.exports = function(passport, jwtOptions, authentication) {
             // find user from database 
             DatabaseProxy.getUserFromUsername(username)
                 .then((user) => {
-
+                    let decryptedPassword = decryptPassword(user.password)
+                    if (decryptedPassword == password) {
+                        done(null, user)
+                    } else {
+                        done(null, false, "incorrect password");
+                    }
                 })
                 .catch((err) => {
-
+                    done(null, false);
                 })
-                
-            if (!user) {
-                done(null, false, "no such user exists");
-            }
-
-            if (user.password == password) {
-                done(null, user)
-            } else {
-                done(null, false, "incorrect password");
-            }
-
     }));
 
     function validateLoginParameters(req, res, next) {
@@ -53,38 +56,38 @@ module.exports = function(passport, jwtOptions, authentication) {
         }
     }
 
-    function createAccessToken(userID) {
-        var payload = {id: userID}; // should we use username or id??
+    function createAccessToken(username) {
+        var payload = {username: username}; // should we use username or id??
         var accessToken = jwt.sign(payload, jwtOptions.secretOrKey, {
             expiresIn: jwtOptions.expiresIn
         });
         return accessToken
     }
 
-    function createRefreshToken(userID, success, error) {
+    function createRefreshToken(username, success, error) {
         var refreshToken = randtoken.uid(256);
         // store refresh token to database
-        DatabaseProxy.saveRefreshTokenInDatabase(refreshToken, userID)
+        DatabaseProxy.writeRefreshTokenToDatabase(refreshToken, username)
             .then(() => {
                 success(refreshToken)
             }).catch((error) => {
-                error(error)
+                error(new Error(error))
             })
     }
 
     function validateRefreshToken(accessToken, refreshToken, success, error) {
-        DatabaseProxy.getUsernameFromRefreshToken(refreshToken).then((userID) => {
+        DatabaseProxy.getUsernameFromRefreshToken(refreshToken).then((username) => {
             jwt.verify(accessToken, jwtOptions.secretOrKey, {ignoreExpiration:true}, (err, decoded) => {
-                if (decoded && decoded.id == userID) {
+                if (decoded && decoded.username == username) {
                     // valid refresh token
                     console.log("Create access token");
-                    success(createAccessToken(userID))
+                    success(createAccessToken(username))
                 } else {
                     error(new Error("Invalid refresh token"))
                 }
             })
         }).catch((error) => {
-            error(error);
+            error(new Error(error));
         })
     }
 
@@ -92,13 +95,7 @@ module.exports = function(passport, jwtOptions, authentication) {
         return authorization.split(' ')[1]
     }
 
-    function encryptPassword(password) {
-        return CryptoJS.AES.encrypt(password, SECRET_KEY);
-    }
 
-    function decryptPassword(cipherText) {
-        return CryptoJS.AES.decrypt(ciphertext.toString(), SECRET_KEY).toString(CryptoJS.enc.Utf8);
-    }
 
     router.post('/login', validateLoginParameters, (req, res) => {
         passport.authenticate('local', (err, user, info) => {
@@ -107,11 +104,11 @@ module.exports = function(passport, jwtOptions, authentication) {
                     message: err
                 })
             } else if (user) {
-                createRefreshToken(user.id, (refreshToken) => {
+                createRefreshToken(user.username, (refreshToken) => {
                     res.json({
                         message: "ok", 
-                        accessToken: createAccessToken(user.id),
-                        refreshToken: createRefreshToken(user.id)
+                        accessToken: createAccessToken(user.username),
+                        refreshToken: refreshToken
                     });
                 }, (err) => {
                     res.status(500).json({

@@ -6,14 +6,13 @@ var jwt = require('jsonwebtoken');
 var passport = require("passport");
 var passportJWT = require("passport-jwt");
 var UserCredentials = require('./authentication/UserCredentials');
+var DatabaseProxy = require('./controllers/DatabaseProxy');
 
 var ExtractJwt = passportJWT.ExtractJwt;
 var JwtStrategy = passportJWT.Strategy;
 
 var app = express()
 var port = process.env.PORT || 3000;
-
-var users = require('./Users.json');
 
 // authentication strategy setup
 var jwtOptions = {}
@@ -23,13 +22,13 @@ jwtOptions.expiresIn = "15m"
 
 var jwtStrategy = new JwtStrategy(jwtOptions, (jwtPayload, next) => {
     // add database here 
-    var user = users[jwtPayload.id];
-
-    if (user) {
-        next(null, new UserCredentials(user.id, user.premium));
-    } else {
-        next(null, false);
-    }
+    DatabaseProxy.getUserFromUsername(jwtPayload.id)
+        .then((user) => {
+            next(null, new UserCredentials(user.userID, user.username, user.premium));
+        })
+        .catch((err) => {
+            next(null, false, err);
+        })
 });
 passport.use(jwtStrategy);
 app.use(passport.initialize());

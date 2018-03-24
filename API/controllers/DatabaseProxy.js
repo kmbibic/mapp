@@ -13,32 +13,23 @@ var db_conn_info = {
     }
 };
 
-
-
 var jsonfile = require('jsonfile');
-var SimplificationPrototype = require('../models/SimplificationPrototype')
+var SimplificationPrototype = require('../models/SimplificationPrototype');
+
 const DATABASE_FILE_PATH = __dirname+"/../database.json";
-const REFRESH_TOKEN_TABLE_NAME = "RefreshTokens"
+const REFRESH_TOKENS_TABLE_NAME = "RefreshTokens";
+const USERS_TABLE_NAME = "Users";
+const SIMPLIFICATIONS_TABLE_NAME = "Simplifications"
 
 var databaseResultsCache = {};
 var databaseStepsCache = {};
-
-function deepCopy(arr) {
-    let newArr = [];
-
-    for (var i in arr) {
-        newArr.push(new SimplificationPrototype(arr[i]).clone());
-    }
-
-    return newArr;
-}
 
 function queryData(queryString, success, error) {
     var connection = new Connection(db_conn_info);
     
     connection.on('connect', function(err) {
         if (err) {
-          error(err);
+            error(err);
           connection.close();
         } else {
             var request = new Request(
@@ -64,11 +55,11 @@ function getStepsAndResultFromObject(database, expression){
     if (database == {}) {
         return null;
     }
-
+    
     if (!database[expression]) {
         return null;
     }
-
+    
     var response = {
         steps: [],
         result: ""
@@ -81,22 +72,9 @@ function getStepsAndResultFromObject(database, expression){
         response.steps.push(nextStep);
         currentStep = nextStep.step;
     }
-
+    
     response.result = currentStep;
     return response;
-}
-
-function readDatabase() {
-    return new Promise((resolve, reject) => {
-        jsonfile.readFile(DATABASE_FILE_PATH, (err, database) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-
-            resolve(database);
-        });
-    })
 }
 
 function getSimplificationsFromDatabase(expression) {
@@ -119,7 +97,6 @@ function getSimplificationsFromDatabase(expression) {
         queryData(
             SimplificationsSQLString,
             (rows) => {
-                // iterate through result set if applicable
                 if (rows.length == 0) {
                     return null;
                 }
@@ -148,6 +125,16 @@ function getSimplificationsFromDatabase(expression) {
     })
 }
 
+function deepCopy(arr) {
+    let newArr = [];
+
+    for (var i in arr) {
+        newArr.push(new SimplificationPrototype(arr[i]).clone());
+    }
+
+    return newArr;
+}
+
 function storeToCache(expression, data, steps, result) {
     // check whether in cache already
     if (getStepsAndResultFromObject(databaseStepsCache, expression)) {
@@ -174,8 +161,8 @@ function storeToCache(expression, data, steps, result) {
 
     databaseResultsCache[currentKey] = result;
     databaseStepsCache[currentKey] = {};
-    // console.log("Store to cache");
-    // console.log(databaseStepsCache);
+    console.log("Store to cache");
+    console.log(databaseStepsCache);
 }
 
 function writeToDatabase(requestString, success, error) {
@@ -204,34 +191,12 @@ function writeToDatabase(requestString, success, error) {
         }});
 }
 
-function getUserIDFromUsername(username) {
-    return new Promise((resolve, reject) => {
-        var userIDSQLString = `
-            SELECT user_id
-            FROM Users
-            WHERE username = '${username}';`
-    
-        queryData(
-            userIDSQLString,
-            (rows) => {
-                if (rows.length == 0) {
-                    return null;
-                }
-                resolve(rows[0][0].value)
-            },
-            (error) => {
-                reject(error);
-            }
-        );
-    })
-}
-
 exports.writeRefreshTokenToDatabase = function(refreshToken, username) {
     return new Promise((resolve, reject) => {
-        getUserIDFromUsername(username).then((userID) => {
+        exports.getUserFromUsername(username).then((user) => {
             var writeRefreshTokenSQLString = `
                 INSERT INTO ${REFRESH_TOKEN_TABLE_NAME} (user_id, token)
-                VALUES (${userID}, '${refreshToken}')
+                VALUES (${user.user_id}, '${refreshToken}')
             `
 
             writeToDatabase(
@@ -251,9 +216,9 @@ exports.writeRefreshTokenToDatabase = function(refreshToken, username) {
         
 }
 
-function checkIfExpressionInDatabase(expression) {
+function getExpressionsNotInDatabase(expression) {
     return new Promise((resolve, reject) => {
-        var userIDSQLString = `
+        var expressionsSQLString = `
             SELECT *
             FROM Simplifications
             WHERE expression = '${expression}';`
@@ -262,7 +227,8 @@ function checkIfExpressionInDatabase(expression) {
             userIDSQLString,
             (rows) => {
                 if (rows.length == 0) {
-                    return null;
+                    resolve(null);
+                    return;
                 }
                 resolve(rows[0][0].value)
             },
@@ -391,7 +357,8 @@ exports.getUserFromUsername = function(username) {
 
         queryData(userSQLString, (rows) => {
             if (rows.length == 0) {
-                reject(new Error("No registered user under given username"))
+                reject("No registered user under given username")
+                return;
             }
             var user = {
                 "userID": "",
@@ -411,23 +378,6 @@ exports.getUserFromUsername = function(username) {
     });
 }
 
-exports.saveRefreshTokenInDatabase = function(refreshToken, userID) {
-    return new Promise((resolve, reject) => {
-        var refreshTokenSQLString = `INSERT INTO RefreshTokens (user_id, token) VALUES (${userID}, '${refreshToken}')`
-
-        queryData(refreshTokenSQLString, (rows) => {
-            if (!rows) {
-                reject(new Error("Not able to store refresh token"));
-                return;
-            }
-
-            resolve()
-        }, (error) => {
-            reject(error);
-        })
-    })
-}
-
 exports.getUsernameFromRefreshToken = function(refreshToken) {
     return new Promise((resolve, reject) => {
         var usernameSQLString = `
@@ -439,7 +389,7 @@ exports.getUsernameFromRefreshToken = function(refreshToken) {
 
         queryData(usernameSQLString, (rows) => {
             if (!rows || !rows[0]) {
-                reject(new Error("Not a valid refresh token"))
+                reject("Not a valid refresh token")
                 return;
             }
 
