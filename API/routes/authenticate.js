@@ -1,10 +1,11 @@
+var CryptoJS = require("crypto-js");
+var DatabaseProxy = require('./../controllers/DatabaseProxy');
 var express = require('express');
-var router = express.Router();
 var jwt = require('jsonwebtoken');
 var LocalStrategy = require('passport-local').Strategy;
-var CryptoJS = require("crypto-js");
 var randtoken = require('rand-token');
-var DatabaseProxy = require('./../controllers/DatabaseProxy');
+
+var router = express.Router();
 
 var SECRET_KEY = "secretSecret4242SecretSecret"
 
