@@ -13,32 +13,23 @@ var db_conn_info = {
     }
 };
 
-
-
 var jsonfile = require('jsonfile');
-var SimplificationPrototype = require('../models/SimplificationPrototype')
+var SimplificationPrototype = require('../models/SimplificationPrototype');
+
 const DATABASE_FILE_PATH = __dirname+"/../database.json";
-const REFRESH_TOKEN_TABLE_NAME = "RefreshTokens"
+const REFRESH_TOKENS_TABLE_NAME = "RefreshTokens";
+const USERS_TABLE_NAME = "Users";
+const SIMPLIFICATIONS_TABLE_NAME = "Simplifications"
 
 var databaseResultsCache = {};
 var databaseStepsCache = {};
-
-function deepCopy(arr) {
-    let newArr = [];
-
-    for (var i in arr) {
-        newArr.push(new SimplificationPrototype(arr[i]).clone());
-    }
-
-    return newArr;
-}
 
 function queryData(queryString, success, error) {
     var connection = new Connection(db_conn_info);
     
     connection.on('connect', function(err) {
         if (err) {
-          error(err);
+            error(err);
           connection.close();
         } else {
             var request = new Request(
@@ -64,11 +55,11 @@ function getStepsAndResultFromObject(database, expression){
     if (database == {}) {
         return null;
     }
-
+    
     if (!database[expression]) {
         return null;
     }
-
+    
     var response = {
         steps: [],
         result: ""
@@ -81,22 +72,9 @@ function getStepsAndResultFromObject(database, expression){
         response.steps.push(nextStep);
         currentStep = nextStep.step;
     }
-
+    
     response.result = currentStep;
     return response;
-}
-
-function readDatabase() {
-    return new Promise((resolve, reject) => {
-        jsonfile.readFile(DATABASE_FILE_PATH, (err, database) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-
-            resolve(database);
-        });
-    })
 }
 
 function getSimplificationsFromDatabase(expression) {
@@ -119,7 +97,6 @@ function getSimplificationsFromDatabase(expression) {
         queryData(
             SimplificationsSQLString,
             (rows) => {
-                // iterate through result set if applicable
                 if (rows.length == 0) {
                     return null;
                 }
@@ -148,6 +125,16 @@ function getSimplificationsFromDatabase(expression) {
     })
 }
 
+function deepCopy(arr) {
+    let newArr = [];
+
+    for (var i in arr) {
+        newArr.push(new SimplificationPrototype(arr[i]).clone());
+    }
+
+    return newArr;
+}
+
 function storeToCache(expression, data, steps, result) {
     // check whether in cache already
     if (getStepsAndResultFromObject(databaseStepsCache, expression)) {
@@ -174,8 +161,8 @@ function storeToCache(expression, data, steps, result) {
 
     databaseResultsCache[currentKey] = result;
     databaseStepsCache[currentKey] = {};
-    // console.log("Store to cache");
-    // console.log(databaseStepsCache);
+    console.log("Store to cache");
+    console.log(databaseStepsCache);
 }
 
 function writeToDatabase(requestString, success, error) {
@@ -204,34 +191,12 @@ function writeToDatabase(requestString, success, error) {
         }});
 }
 
-function getUserIDFromUsername(username) {
-    return new Promise((resolve, reject) => {
-        var userIDSQLString = `
-            SELECT user_id
-            FROM Users
-            WHERE username = '${username}';`
-    
-        queryData(
-            userIDSQLString,
-            (rows) => {
-                if (rows.length == 0) {
-                    return null;
-                }
-                resolve(rows[0][0].value)
-            },
-            (error) => {
-                reject(error);
-            }
-        );
-    })
-}
-
 exports.writeRefreshTokenToDatabase = function(refreshToken, username) {
     return new Promise((resolve, reject) => {
-        getUserIDFromUsername(username).then((userID) => {
+        exports.getUserFromUsername(username).then((user) => {
             var writeRefreshTokenSQLString = `
                 INSERT INTO ${REFRESH_TOKEN_TABLE_NAME} (user_id, token)
-                VALUES (${userID}, '${refreshToken}')
+                VALUES (${user.user_id}, '${refreshToken}')
             `
 
             writeToDatabase(
@@ -251,9 +216,9 @@ exports.writeRefreshTokenToDatabase = function(refreshToken, username) {
         
 }
 
-function checkIfExpressionInDatabase(expression) {
+function getExpressionsNotInDatabase(expression) {
     return new Promise((resolve, reject) => {
-        var userIDSQLString = `
+        var expressionsSQLString = `
             SELECT *
             FROM Simplifications
             WHERE expression = '${expression}';`
@@ -385,7 +350,7 @@ exports.getResults = function(expression){
 exports.getUserFromUsername = function(username) {
     return new Promise((resolve, reject) => {
         var userSQLString = `
-            SELECT username, encrypted_password AS password, is_premium AS premium
+            SELECT user_id, username, encrypted_password AS password, is_premium AS premium
             FROM Users
             WHERE username = '${username}'`
 
@@ -436,10 +401,10 @@ exports.getUsernameFromRefreshToken = function(refreshToken) {
 exports.getSteps = function(expression){
     console.log("called getSteps");
     // exports.writeRefreshTokenToDatabase("testtoken2", "harrypotter4242")
-    // exports.getUserFromUsername("harrypotter4242").then((something) => {
-    //     console.log(something);
-    // }).catch((error) => {
-    // })
+    exports.getUserFromUsername("hermione_granger").then((something) => {
+        console.log(something);
+    }).catch((error) => {
+    })
     return new Promise((resolve, reject) => {
         if (databaseResultsCache[expression]) {
             var responseObject = getStepsAndResultFromObject(databaseStepsCache, expression);
@@ -464,185 +429,3 @@ exports.getSteps = function(expression){
             })
     })
 }
-// function queryStepsAndReesultFromDatabase(expression) {
-//     console.log("Called queryStepsAndResultFromDatabase");
-//     var currentStep = expression;
-//     var response = {
-//         steps: [],
-//         result: ""
-//     };
-
-//     while (nextSimplification[step] && nextSimplification[simplification_rule]) {
-//         var nextSimplification = queryRecords(`
-//             SELECT step, simplification_rule, expression
-//             FROM Simplifications
-//             WHERE expression = '$(currentStep)'
-//         `);
-
-//         response.steps.push({"step": currentStep, "rule": nextSimplification[simplification_rule]});
-//         currentStep = nextSimplification[expression];
-//     }
-
-//     return response;
-// }
-
-// function writeSimplificationToDatabase(expression, step, rule) { // how does this know what the step index is?
-//     console.log("Called writeSimplificationToDatabase");
-//     queryRecords(`
-//         INSERT INTO Simplifications (step, expression, simplification_rule)
-//         VALUES ($(step), '$(expression)', '$(rule)');
-//     `);
-// }
-
-// function readResultsFromDatabase(expression) {
-//     console.log("Called readResultsFromDatabase");
-//     return new Promise((resolve, reject) => {
-//         var connection = new Connection(db_conn_info);
-
-//         connection.on('connect', function(err) {
-//             if (err) {
-//                 reject(err);
-//                 return;
-//             }
-            
-//             console.log('Connection to database was successful');
-//             var simplifications = queryStepsAndResultFromDatabase(expression);
-//         });
-        
-//         console.log(simplifications)
-//         connection.close(); // does it make sense to close the db connection here?
-//         return simplifications;
-//     })
-// }
-
-// function storeToCache(expression, steps, result) {
-//     console.log("Called storeToCache");
-//     // check whether in cache already
-//     if (readResultsFromDatabase(expression)) {
-//         return;
-//     }
-
-//     let steps_deepCopy = deepCopy(steps); // deep copy of steps so changes to original object don't affect cache
-
-//     var newElements = {};
-//     var currentKey = expression;
-    
-//     for (var i in steps_deepCopy) {
-//         let currentStep = steps_deepCopy[i];
-//         // Set result for step
-//         if (databaseResultsCache[currentKey]) {
-//             return;
-//         }
-        
-//         databaseResultsCache[currentKey] = result;
-//         databaseStepsCache[currentKey] = currentStep;
-        
-//         currentKey = currentStep.step;
-//     }
-    
-//     databaseResultsCache[currentKey] = result;
-//     databaseStepsCache[currentKey] = {};
-//     console.log("Store to cache");
-//     console.log(databaseStepsCache);
-// }
-
-// exports.writeToDatabase = function(expression, steps, result) {  // this one's next!  need to make this write to the db and check that it does this correctly.
-//     console.log("called writeToDatabase");
-
-//     return new Promise((resolve, reject) => {
-//         // May have some concurrency issues
-
-//         // Check if already cached -> if already cached, it is in the database or in process of being in the database
-//         if (databaseResultsCache[expression]) {
-//             resolve(false);
-//             return;
-//         }
-
-//         var databaseWriteObj = {};
-//         var currentKey = expression;
-
-//         storeToCache(expression, steps, result);
-
-//         for (var i in steps) {
-//             let currentStep = steps[i];
-//             // Set result for step
-//             databaseWriteObj[currentKey] = currentStep;
-
-//             currentKey = currentStep.step;
-//         }
-
-//         databaseWriteObj[currentKey] = {};
-
-//         readResultsFromDatabase(expression)
-//             .then((result) => {
-//                 let newDatabase = Object.assign({}, result, databaseWriteObj);
-//                 writeSimplificationToDatabase(expression, step, rule, function (err) {
-//                     if (err) {
-//                         reject(err);
-//                         return;
-//                     }
-
-//                     resolve(true);
-//                 })
-//             })
-//             .catch((err) => {
-//                 reject(err);
-//             })
-
-//     })
-// }
-
-// exports.getResults = function(expression){
-//     console.log("called getResults");
-
-//     return new Promise((resolve, reject) => {
-//         if (databaseResultsCache[expression]) {
-//             resolve(databaseResultsCache[expression]);
-//             return;
-//         }
-
-//         readResultsFromDatabase(expression)
-//             .then((databaseResponse) => {
-//                 if (databaseResponse == null) {
-//                     resolve(null);
-//                     return;
-//                 }
-
-//                 // store to cache
-//                 storeToCache(expression, databaseResponse.steps, databaseResponse.result)
-
-//                 resolve(databaseResponse.result);
-//             })
-//             .catch((err) => {
-//                 reject(err);
-//             })
-//     })
-// }
-
-// exports.getSteps = function(expression){
-//     console.log("called getSteps");
-
-//     return new Promise((resolve, reject) => {
-//         if (databaseResultsCache[expression]) {
-//             var responseObject = getStepsAndResultFromObject(databaseStepsCache, expression);
-//             resolve(deepCopy(responseObject.steps));
-//             return;
-//         }
-
-//         readResultsFromDatabase(expression)
-//             .then((databaseResponse) => {
-//                 if (databaseResponse == null) {
-//                     resolve(null);
-//                     return;
-//                 }
-
-//                 // store to cache
-//                 storeToCache(expression, databaseResponse.steps, databaseResponse.result);
-
-//                 resolve(deepCopy(databaseResponse.steps));
-//             })
-//             .catch((err) => {
-//                 reject(err);
-//             })
-//     })
-// }
