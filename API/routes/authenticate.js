@@ -5,6 +5,7 @@ var LocalStrategy = require('passport-local').Strategy;
 var users = require('./../Users.json');
 var CryptoJS = require("crypto-js");
 var randtoken = require('rand-token');
+var DatabaseProxy = require('./../controllers/DatabaseProxy');
 
 var SECRET_KEY = "secretSecret4242SecretSecret"
 
@@ -18,8 +19,14 @@ module.exports = function(passport, jwtOptions, authentication) {
         },
         function(username, password, done) {
             // find user from database 
-            let user = users[username];
+            DatabaseProxy.getUserFromUsername(username)
+                .then((user) => {
 
+                })
+                .catch((err) => {
+
+                })
+                
             if (!user) {
                 done(null, false, "no such user exists");
             }
@@ -54,19 +61,19 @@ module.exports = function(passport, jwtOptions, authentication) {
         return accessToken
     }
 
-    function createRefreshToken(userID) {
+    function createRefreshToken(userID, success, error) {
         var refreshToken = randtoken.uid(256);
         // store refresh token to database
-        refreshTokens[refreshToken] = userID;
-        return refreshToken;
+        DatabaseProxy.saveRefreshTokenInDatabase(refreshToken, userID)
+            .then(() => {
+                success(refreshToken)
+            }).catch((error) => {
+                error(error)
+            })
     }
 
     function validateRefreshToken(accessToken, refreshToken, success, error) {
-        let userID = refreshTokens[refreshToken];
-        console.log(accessToken)
-        console.log(refreshToken)
-        if (userID) {
-            // check if acccessToken matches refreshToken
+        DatabaseProxy.getUsernameFromRefreshToken(refreshToken).then((userID) => {
             jwt.verify(accessToken, jwtOptions.secretOrKey, {ignoreExpiration:true}, (err, decoded) => {
                 if (decoded && decoded.id == userID) {
                     // valid refresh token
@@ -76,9 +83,9 @@ module.exports = function(passport, jwtOptions, authentication) {
                     error(new Error("Invalid refresh token"))
                 }
             })
-        } else {
-            error(new Error("No user for given refresh token"))
-        }
+        }).catch((error) => {
+            error(error);
+        })
     }
 
     function extractJWT(authorization) {
@@ -100,10 +107,16 @@ module.exports = function(passport, jwtOptions, authentication) {
                     message: err
                 })
             } else if (user) {
-                res.json({
-                    message: "ok", 
-                    accessToken: createAccessToken(user.id),
-                    refreshToken: createRefreshToken(user.id)
+                createRefreshToken(user.id, (refreshToken) => {
+                    res.json({
+                        message: "ok", 
+                        accessToken: createAccessToken(user.id),
+                        refreshToken: createRefreshToken(user.id)
+                    });
+                }, (err) => {
+                    res.status(500).json({
+                        message: "Unable to create refresh token"
+                    });
                 });
             }
         })(req, res);

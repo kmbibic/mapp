@@ -1,6 +1,24 @@
+var Connection = require('tedious').Connection;
+var Request = require('tedious').Request;
+
+// set database connection info details
+var db_conn_info = { 
+    userName: 'MAPPAdmin', 
+    password: 'MAPPfast1fast',  // theoretically this would be good to hide, but instructors need to access db too
+    server: 'mapp.database.windows.net',
+    options: {
+        database: 'mappDB', 
+        encrypt: true,
+        rowCollectionOnRequestCompletion: true
+    }
+};
+
+
+
 var jsonfile = require('jsonfile');
 var SimplificationPrototype = require('../models/SimplificationPrototype')
 const DATABASE_FILE_PATH = __dirname+"/../database.json";
+const REFRESH_TOKEN_TABLE_NAME = "RefreshTokens"
 
 var databaseResultsCache = {};
 var databaseStepsCache = {};
@@ -13,6 +31,33 @@ function deepCopy(arr) {
     }
 
     return newArr;
+}
+
+function queryData(queryString, success, error) {
+    var connection = new Connection(db_conn_info);
+    
+    connection.on('connect', function(err) {
+        if (err) {
+          error(err);
+          connection.close();
+        } else {
+            var request = new Request(
+                queryString,
+                function(err, rowCount, rows) {
+                    console.log(rowCount + ' row(s) returned');
+                    if (err) {
+                        error(new Error("Database query error: " + err.message));
+                    } else {
+                        success(rows);
+                    }
+                    
+                    connection.close()
+                }
+            );
+        
+            // run the query request
+            connection.execSql(request);
+        }});
 }
 
 function getStepsAndResultFromObject(database, expression){
@@ -54,20 +99,56 @@ function readDatabase() {
     })
 }
 
-function getValueFromDatabase(key) {
+function getSimplificationsFromDatabase(expression) {
     return new Promise((resolve, reject) => {
-        readDatabase()
-            .then( (database) => {
-                resolve(getStepsAndResultFromObject(database, key));
-            })
-            .catch( (err) => {
-                reject(err);
-                return;
-            })
+        var SimplificationsSQLString = `
+            WITH cte_all_simplification_steps (id, expression, step, simplification_rule)
+            AS (
+                SELECT id, expression, step, simplification_rule
+                FROM Simplifications
+                WHERE expression = '${expression}'
+                UNION ALL
+                SELECT S.id, S.expression, S.step, S.simplification_rule
+                FROM Simplifications AS S, cte_all_simplification_steps
+                WHERE cte_all_simplification_steps.step IS NOT NULL
+                AND S.id = cte_all_simplification_steps.step
+            )
+            SELECT id, expression, step, simplification_rule
+            FROM cte_all_simplification_steps;`
+    
+        queryData(
+            SimplificationsSQLString,
+            (rows) => {
+                // iterate through result set if applicable
+                if (rows.length == 0) {
+                    return null;
+                }
+
+                var response = {
+                    steps: [],
+                    result: ""
+                };
+
+                for (i = 0; i < rows.length; i++) {
+                    var simplification_step = {
+                        step: rows[i][1].value,
+                        rule: rows[i][3].value
+                    };
+                    response.steps.push(simplification_step);
+                }
+
+                response.result = rows[rows.length - 1][1].value;
+
+                resolve(response);
+            },
+            (error) => {
+                reject(error);
+            }
+        );
     })
 }
 
-function storeToCache(expression, steps, result) {
+function storeToCache(expression, data, steps, result) {
     // check whether in cache already
     if (getStepsAndResultFromObject(databaseStepsCache, expression)) {
         return;
@@ -93,14 +174,149 @@ function storeToCache(expression, steps, result) {
 
     databaseResultsCache[currentKey] = result;
     databaseStepsCache[currentKey] = {};
-    console.log("Store to cache");
-    console.log(databaseStepsCache);
+    // console.log("Store to cache");
+    // console.log(databaseStepsCache);
+}
+
+function writeToDatabase(requestString, success, error) {
+    var connection = new Connection(db_conn_info);
+    
+    connection.on('connect', function(err) {
+        if (err) {
+            error(err);
+            connection.close();
+        } else {
+            var request = new Request(
+                requestString,
+                function (err, rowCount) {
+                    if (err) {
+                        error(new Error("Error when writing to database: " + err.message));
+                    } else {
+                        console.log('inserted %d rows', rowCount);
+                        success();
+                    }
+
+                    connection.close();
+                });
+        
+            // run the query request
+            connection.execSql(request);
+        }});
+}
+
+function getUserIDFromUsername(username) {
+    return new Promise((resolve, reject) => {
+        var userIDSQLString = `
+            SELECT user_id
+            FROM Users
+            WHERE username = '${username}';`
+    
+        queryData(
+            userIDSQLString,
+            (rows) => {
+                if (rows.length == 0) {
+                    return null;
+                }
+                resolve(rows[0][0].value)
+            },
+            (error) => {
+                reject(error);
+            }
+        );
+    })
+}
+
+exports.writeRefreshTokenToDatabase = function(refreshToken, username) {
+    return new Promise((resolve, reject) => {
+        getUserIDFromUsername(username).then((userID) => {
+            var writeRefreshTokenSQLString = `
+                INSERT INTO ${REFRESH_TOKEN_TABLE_NAME} (user_id, token)
+                VALUES (${userID}, '${refreshToken}')
+            `
+
+            writeToDatabase(
+                writeRefreshTokenSQLString,
+                () => {
+                    resolve()
+                },
+                (error) => {
+                    reject(error);
+                }
+            );
+            
+        }).catch((error) => {
+            reject(error);
+        });
+    });
+        
+}
+
+function checkIfExpressionInDatabase(expression) {
+    return new Promise((resolve, reject) => {
+        var userIDSQLString = `
+            SELECT *
+            FROM Simplifications
+            WHERE expression = '${expression}';`
+    
+        queryData(
+            userIDSQLString,
+            (rows) => {
+                if (rows.length == 0) {
+                    return null;
+                }
+                resolve(rows[0][0].value)
+            },
+            (error) => {
+                reject(error);
+            }
+        );
+    })
+}
+
+exports.writeSimplificationsToDatabase = function(expression, steps, result) {
+    return new Promise((resolve, reject) => {
+        // Check if already cached -> if already cached, it is in the database or in process of being in the database
+        if (databaseResultsCache[expression]) {
+            resolve(false);
+            return;
+        }
+
+        var databaseWriteObj = {};
+        var currentKey = expression;
+
+        storeToCache(expression, steps, result);
+
+        for (var i in steps) {
+            let currentStep = steps[i];
+            // Set result for step
+            databaseWriteObj[currentKey] = currentStep;
+
+            currentKey = currentStep.step;
+        }
+
+        databaseWriteObj[currentKey] = {};
+
+        var writeRefreshTokenSQLString = `
+                INSERT INTO ${REFRESH_TOKEN_TABLE_NAME} (user_id, token)
+                VALUES (${userID}, '${refreshToken}')
+            `
+
+        writeToDatabase(
+            writeRefreshTokenSQLString,
+            () => {
+                resolve(true)
+            },
+            (error) => {
+                reject(error);
+            }
+        );
+    });
 }
 
 exports.writeToDatabase = function(expression, steps, result) {
-    return new Promise((resolve, reject) => {
-        // May have some concurrency issues
+    console.log("called writeToDatabase");
 
+    return new Promise((resolve, reject) => {
         // Check if already cached -> if already cached, it is in the database or in process of being in the database
         if (databaseResultsCache[expression]) {
             resolve(false);
@@ -137,18 +353,18 @@ exports.writeToDatabase = function(expression, steps, result) {
             .catch((err) => {
                 reject(err);
             })
-
     })
 }
 
 exports.getResults = function(expression){
+    console.log("called getResults");
     return new Promise((resolve, reject) => {
         if (databaseResultsCache[expression]) {
             resolve(databaseResultsCache[expression]);
             return;
         }
 
-        getValueFromDatabase(expression)
+        getSimplificationsFromDatabase(expression)
             .then((databaseResponse) => {
                 if (databaseResponse == null) {
                     resolve(null);
@@ -166,6 +382,76 @@ exports.getResults = function(expression){
     })
 }
 
+exports.getUserFromUsername = function(username) {
+    return new Promise((resolve, reject) => {
+        var userSQLString = `
+            SELECT user_id AS userID, username, encrypted_password AS password, is_premium AS premium
+            FROM Users
+            WHERE username = '${username}'`
+
+        queryData(userSQLString, (rows) => {
+            if (rows.length == 0) {
+                reject(new Error("No registered user under given username"))
+            }
+            var user = {
+                "userID": "",
+                "username": "",
+                "password": "",
+                "premium": false
+            }
+
+            rows[0].forEach((column) => {
+                user[column.metadata.colName] = column.value
+            })
+
+            resolve(user)
+        }, (error) => {
+            reject(error)
+        })
+    });
+}
+
+exports.saveRefreshTokenInDatabase = function(refreshToken, userID) {
+    return new Promise((resolve, reject) => {
+        var refreshTokenSQLString = `INSERT INTO RefreshTokens (user_id, token) VALUES (${userID}, '${refreshToken}')`
+
+        queryData(refreshTokenSQLString, (rows) => {
+            if (!rows) {
+                reject(new Error("Not able to store refresh token"));
+                return;
+            }
+
+            resolve()
+        }, (error) => {
+            reject(error);
+        })
+    })
+}
+
+exports.getUsernameFromRefreshToken = function(refreshToken) {
+    return new Promise((resolve, reject) => {
+        var usernameSQLString = `
+            SELECT username
+            FROM Users
+            LEFT JOIN RefreshTokens
+            ON Users.user_id = RefreshTokens.user_id
+            WHERE token = '${refreshToken}'`
+
+        queryData(usernameSQLString, (rows) => {
+            if (!rows || !rows[0]) {
+                reject(new Error("Not a valid refresh token"))
+                return;
+            }
+
+            var username = rows[0][0].value
+
+            resolve(username)
+        }, (error) => {
+            reject(error)
+        })
+    });
+}
+
 exports.getSteps = function(expression){
     return new Promise((resolve, reject) => {
         if (databaseResultsCache[expression]) {
@@ -174,7 +460,7 @@ exports.getSteps = function(expression){
             return;
         }
 
-        getValueFromDatabase(expression)
+        getSimplificationsFromDatabase(expression)
             .then((databaseResponse) => {
                 if (databaseResponse == null) {
                     resolve(null);
