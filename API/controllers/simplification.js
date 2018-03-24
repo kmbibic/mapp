@@ -77,7 +77,7 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
     function manualFind(standardizedExpression) {
         let result = findBooleanSimplificationSteps(standardizedExpression);
 
-        DatabaseProxy.writeToDatabase(standardizedExpression, result.steps, result.result)
+        DatabaseProxy.writeSimplificationsToDatabase(standardizedExpression, result.steps, result.result)
             .then((success) => {})
             .catch((err) => {
                 console.log(err);

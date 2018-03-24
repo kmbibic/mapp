@@ -97,7 +97,8 @@ function getSimplificationsFromDatabase(expression) {
             SimplificationsSQLString,
             (rows) => {
                 if (rows.length == 0) {
-                    return null;
+                    resolve(null);
+                    return;
                 }
 
                 var response = {
@@ -210,49 +211,6 @@ function getExpressionsNotInDatabase(expression) {
                 reject(error);
             }
         );
-    })
-}
-
-exports.writeToDatabase = function(expression, steps, result) {
-    console.log("called writeToDatabase");
-
-    return new Promise((resolve, reject) => {
-        // Check if already cached -> if already cached, it is in the database or in process of being in the database
-        if (databaseResultsCache[expression]) {
-            resolve(false);
-            return;
-        }
-
-        var databaseWriteObj = {};
-        var currentKey = expression;
-
-        storeToCache(expression, steps, result);
-
-        for (var i in steps) {
-            let currentStep = steps[i];
-            // Set result for step
-            databaseWriteObj[currentKey] = currentStep;
-
-            currentKey = currentStep.step;
-        }
-
-        databaseWriteObj[currentKey] = {};
-
-        readDatabase()
-            .then((database) => {
-                let newDatabase = Object.assign({}, database, databaseWriteObj);
-                jsonfile.writeFile(DATABASE_FILE_PATH, newDatabase, function (err) {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-
-                    resolve(true);
-                })
-            })
-            .catch((err) => {
-                reject(err);
-            })
     })
 }
 
