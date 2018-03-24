@@ -13,10 +13,6 @@ var refreshTokens = {}
 
 module.exports = function(passport, jwtOptions, authentication) {
     // login strategy
-    // function encryptPassword(password) {
-    //     return CryptoJS.AES.encrypt(password, SECRET_KEY).toString();
-    // }
-
     function decryptPassword(cipherText) {
         // let parsedText = CryptoJS.enc.Base64.parse(cipherText)
         let decryptedText = CryptoJS.AES.decrypt(cipherText, SECRET_KEY).toString(CryptoJS.enc.Utf8);
@@ -34,11 +30,11 @@ module.exports = function(passport, jwtOptions, authentication) {
                     if (decryptedPassword == password) {
                         done(null, user)
                     } else {
-                        done(null, false, "incorrect password");
+                        done("incorrect password", false);
                     }
                 })
                 .catch((err) => {
-                    done(null, false);
+                    done(err, false);
                 })
     }));
 

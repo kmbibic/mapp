@@ -22,7 +22,7 @@ jwtOptions.expiresIn = "15m"
 
 var jwtStrategy = new JwtStrategy(jwtOptions, (jwtPayload, next) => {
     // add database here 
-    DatabaseProxy.getUserFromUsername(jwtPayload.id)
+    DatabaseProxy.getUserFromUsername(jwtPayload.username)
         .then((user) => {
             next(null, new UserCredentials(user.userID, user.username, user.premium));
         })

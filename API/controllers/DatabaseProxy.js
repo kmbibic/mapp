@@ -195,8 +195,8 @@ exports.writeRefreshTokenToDatabase = function(refreshToken, username) {
     return new Promise((resolve, reject) => {
         exports.getUserFromUsername(username).then((user) => {
             var writeRefreshTokenSQLString = `
-                INSERT INTO ${REFRESH_TOKEN_TABLE_NAME} (user_id, token)
-                VALUES (${user.user_id}, '${refreshToken}')
+                INSERT INTO ${REFRESH_TOKENS_TABLE_NAME} (user_id, token)
+                VALUES (${user.userID}, '${refreshToken}')
             `
 
             writeToDatabase(
@@ -205,7 +205,7 @@ exports.writeRefreshTokenToDatabase = function(refreshToken, username) {
                     resolve()
                 },
                 (error) => {
-                    reject(error);
+                    reject(error.message);
                 }
             );
             
@@ -263,7 +263,7 @@ exports.writeSimplificationsToDatabase = function(expression, steps, result) {
         databaseWriteObj[currentKey] = {};
 
         var writeRefreshTokenSQLString = `
-                INSERT INTO ${REFRESH_TOKEN_TABLE_NAME} (user_id, token)
+                INSERT INTO ${REFRESH_TOKENS_TABLE_NAME} (user_id, token)
                 VALUES (${userID}, '${refreshToken}')
             `
 
