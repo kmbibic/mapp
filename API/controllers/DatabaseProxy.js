@@ -227,15 +227,18 @@ exports.writeSimplificationsToDatabase = function(expression, steps, result) {
 
         storeToCache(expression, steps, result);
 
+        var values = ""
         for (var i in steps) {
             let currentStep = steps[i];
             // Set result for step
             databaseWriteObj[currentKey] = currentStep;
-
             currentKey = currentStep.step;
         }
 
-        databaseWriteObj[currentKey] = {};
+        var writeSimplificationsToDatabaseSQLString = `
+        INSERT INTO Simplifications ( expression, simplification_rule, step_num) 
+        VALUES ${values}`
+
         resolve(true);
         // var writeRefreshTokenSQLString = `
         //         INSERT INTO ${SIMPLIFICATIONS_TABLE_NAME} (user_id, token)
