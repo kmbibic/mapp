@@ -44,7 +44,7 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
                 var results = {};
                 if (steps == null) {
                     // get steps manually
-                    results = manualFind(standardizedExpression).steps;
+                    results = manualFind(standardizedExpression, false).steps;
                 } else {
                     results = steps;
                 }
@@ -53,7 +53,7 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
             })
             .catch((err) => {
                 console.log("Database error: " + err);
-                callback(unstandardizeResult(manualFind(standardizedExpression).steps, standardizationMap));
+                callback(unstandardizeResult(manualFind(standardizedExpression, false).steps, standardizationMap));
             })
     } else {
         DatabaseProxy.getResults(standardizedExpression)
@@ -61,7 +61,7 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
                 var results = null;
                 if (result == null) {
                     // get steps manually
-                    results = manualFind(standardizedExpression).result;
+                    results = manualFind(standardizedExpression, true).result;
                 } else {
                     results = result;
                 }
@@ -70,18 +70,22 @@ function simplifyBooleanExpression(expression, withSteps, callback) {
             })
             .catch((err) => {
                 console.log("Database error: " + err);
-                callback(unstandardizeResult(manualFind(standardizedExpression).result, standardizationMap));
+                callback(unstandardizeResult(manualFind(standardizedExpression, true).result, standardizationMap));
             })
     }
 
-    function manualFind(standardizedExpression) {
+    function manualFind(standardizedExpression, saveToDatabase) {
         let result = findBooleanSimplificationSteps(standardizedExpression);
 
-        DatabaseProxy.writeSimplificationsToDatabase(standardizedExpression, result.steps, result.result)
-            .then((success) => {})
-            .catch((err) => {
-                console.log(err);
-            });
+        if (saveToDatabase) {
+            DatabaseProxy.writeSimplificationsToDatabase(standardizedExpression, result.steps, result.result)
+                .then((success) => {
+                    return;
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        }
 
         return result; // do deep copy of object so future motifications don't affect database
     }
