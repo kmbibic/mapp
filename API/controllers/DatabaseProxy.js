@@ -240,20 +240,6 @@ exports.writeSimplificationsToDatabase = function(expression, steps, result) {
         VALUES ${values}`
 
         resolve(true);
-        // var writeRefreshTokenSQLString = `
-        //         INSERT INTO ${SIMPLIFICATIONS_TABLE_NAME} (user_id, token)
-        //         VALUES (${userID}, '${refreshToken}')
-        //     `
-
-        // writeToDatabase(
-        //     writeRefreshTokenSQLString,
-        //     () => {
-        //         resolve(true)
-        //     },
-        //     (error) => {
-        //         reject(error);
-        //     }
-        // );
     });
 }
 
