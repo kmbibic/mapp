@@ -236,21 +236,21 @@ exports.writeSimplificationsToDatabase = function(expression, steps, result) {
         }
 
         databaseWriteObj[currentKey] = {};
+        resolve(true);
+        // var writeRefreshTokenSQLString = `
+        //         INSERT INTO ${SIMPLIFICATIONS_TABLE_NAME} (user_id, token)
+        //         VALUES (${userID}, '${refreshToken}')
+        //     `
 
-        var writeRefreshTokenSQLString = `
-                INSERT INTO ${SIMPLIFICATIONS_TABLE_NAME} (user_id, token)
-                VALUES (${userID}, '${refreshToken}')
-            `
-
-        writeToDatabase(
-            writeRefreshTokenSQLString,
-            () => {
-                resolve(true)
-            },
-            (error) => {
-                reject(error);
-            }
-        );
+        // writeToDatabase(
+        //     writeRefreshTokenSQLString,
+        //     () => {
+        //         resolve(true)
+        //     },
+        //     (error) => {
+        //         reject(error);
+        //     }
+        // );
     });
 }
 
