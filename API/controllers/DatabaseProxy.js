@@ -191,29 +191,6 @@ function writeToDatabase(requestString, success, error) {
         }});
 }
 
-function getExpressionsNotInDatabase(expression) {
-    return new Promise((resolve, reject) => {
-        var expressionsSQLString = `
-            SELECT *
-            FROM ${SIMPLIFICATIONS_TABLE_NAME}
-            WHERE expression = '${expression}';`
-    
-        queryData(
-            userIDSQLString,
-            (rows) => {
-                if (rows.length == 0) {
-                    resolve(null);
-                    return;
-                }
-                resolve(rows[0][0].value)
-            },
-            (error) => {
-                reject(error);
-            }
-        );
-    })
-}
-
 exports.writeSimplificationsToDatabase = function(expression, steps, result) {
     return new Promise((resolve, reject) => {
         // Check if already cached -> if already cached, it is in the database or in process of being in the database
@@ -222,28 +199,93 @@ exports.writeSimplificationsToDatabase = function(expression, steps, result) {
             return;
         }
 
-        var databaseWriteObj = {};
-        var currentKey = expression;
+        var currentExpression = expression;
+        var rowObjects = [];
 
         storeToCache(expression, steps, result);
 
         for (var i in steps) {
             let currentStep = steps[i];
             // Set result for step
-            databaseWriteObj[currentKey] = currentStep;
-
-            currentKey = currentStep.step;
+            rowObjects.push(`('${currentExpression}', '${currentStep.rule}')`)
+            currentExpression = currentStep.step;
         }
 
-        databaseWriteObj[currentKey] = {};
-
-        var writeRefreshTokenSQLString = `
-                INSERT INTO ${SIMPLIFICATIONS_TABLE_NAME} (user_id, token)
-                VALUES (${userID}, '${refreshToken}')
-            `
+        var writeSimplificationsSQLString = `
+            CREATE TABLE #TempNewSimplifications
+            (
+                expression VARCHAR(255),
+                simplification_rule VARCHAR(20),
+                step_num INTEGER NOT NULL IDENTITY(1,1)
+            )
+            
+            INSERT INTO #TempNewSimplifications (expression, simplification_rule)
+            VALUES ${rowObjects.join(",")}
+            
+            DECLARE @next_available_id INTEGER;
+            SELECT @next_available_id = (MAX(id) + 1) FROM Simplifications;
+            
+            CREATE TABLE #TempSimplificationsWithInformation
+            (
+                step_num INTEGER NOT NULL,
+                id INTEGER,
+                expression VARCHAR(255),
+                step INTEGER
+                CONSTRAINT fk_id FOREIGN KEY (step)
+                    REFERENCES Simplifications(id),
+                simplification_rule VARCHAR(20),
+                already_in_simplifications_table INTEGER NOT NULL
+            )
+            INSERT INTO #TempSimplificationsWithInformation
+            SELECT #NS.step_num, COALESCE(S.id, @next_available_id + #NS.step_num - 1), #NS.expression, S.step, #NS.simplification_rule, COALESCE(S.id, 0) AS already_in_simplifications_table
+            FROM #TempNewSimplifications AS #NS
+            LEFT JOIN Simplifications AS S
+            ON #NS.expression = S.expression;
+            
+            DECLARE @last_step_num INTEGER;
+            SELECT @last_step_num = (MAX(step_num)) FROM #TempSimplificationsWithInformation;
+            
+            CREATE TABLE #TempSimplificationsToAdd
+            (
+                id INTEGER PRIMARY KEY NOT NULL,
+                expression VARCHAR(255),
+                step INTEGER
+                CONSTRAINT fk_id FOREIGN KEY (step)
+                    REFERENCES Simplifications(id),
+                simplification_rule VARCHAR(20),
+                already_in_simplifications_table INTEGER NOT NULL
+            );
+            
+            WITH cte_simplification_steps_to_add (step_num, id, expression, step, simplification_rule, already_in_simplifications_table)
+            AS (
+                SELECT step_num, id, expression, step, simplification_rule, already_in_simplifications_table
+                FROM #TempSimplificationsWithInformation AS #TS
+                WHERE step_num = @last_step_num
+                UNION ALL
+                SELECT
+                    #TS.step_num AS step_num,
+                    #TS.id,
+                    #TS.expression AS expression,
+                    cte.id AS step,
+                    #TS.simplification_rule AS simplification_rule,
+                    #TS.already_in_simplifications_table AS already_in_simplifications_table
+                FROM #TempSimplificationsWithInformation AS #TS, cte_simplification_steps_to_add AS cte, Simplifications AS S
+                WHERE #TS.step IS NULL
+                    AND #TS.step_num = cte.step_num - 1
+            )
+            INSERT INTO #TempSimplificationsToAdd (id, expression, step, simplification_rule, already_in_simplifications_table)
+            SELECT DISTINCT id, expression, step, simplification_rule, already_in_simplifications_table
+            FROM cte_simplification_steps_to_add;
+            
+            SET IDENTITY_INSERT dbo.Simplifications ON;
+            
+            INSERT INTO Simplifications (id, expression, step, simplification_rule)
+            SELECT id, expression, step, simplification_rule
+            FROM #TempSimplificationsToAdd
+            WHERE already_in_simplifications_table = 0;`
 
         writeToDatabase(
-            writeRefreshTokenSQLString,
+            writeSimplificationsSQLString,
             () => {
                 resolve(true)
             },
