@@ -1,4 +1,21 @@
 <body>
+    <script src='/javascripts/index.js'></script>
+    <script src='/javascripts/indexErrorHandling.js'></script>
+    <script src='/javascripts/Validator.js'></script>
+    <script>
+        $(document).ready(function(){
+            $('[data-toggle="tooltip"]').tooltip(); 
+        });
+    </script>
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/logout">Log Out</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
     <div class="jumbotron">
         <div class="container">
             <h1>MAPP</h1>
@@ -14,8 +31,16 @@
                 <input class="form-control" id="expression">
             </div>
             <div class="form-check form-check-inline my-1 mr-sm-2">
-                <input class="form-check-input" type="checkbox" id="showSteps">
-                <label class="form-check-label" for="showSteps">Show Steps</label>
+                {{#with user}}
+                {{#unless premium}}
+                <span class="d-inline-block" data-toggle="tooltip" title="Must be a premium user to show steps.">
+                {{/unless}}
+                    <input class="form-check-input" type="checkbox" id="showSteps" {{#unless premium}} disabled {{/unless}}>
+                    <label class="form-check-label" for="showSteps">Show Steps</label>
+                {{#unless premium}}
+                </span>
+                {{/unless}}
+                {{/with}}
             </div>
             <button type="button" class="btn-default" onclick="simplifyExpression()">Submit</button>
         

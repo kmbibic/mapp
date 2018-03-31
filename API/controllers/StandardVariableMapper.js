@@ -1,4 +1,4 @@
-const unmappedVariableRegex = /(\+)|(\()|(\))|0|1|~/;
+const UNMAPPED_VARIABLE_REGEX = /(\+)|(\()|(\))|0|1|~/;
 
 function expressionSchema(expression, map){
     return {
@@ -35,7 +35,7 @@ exports.standardizeExpression = function(expression) {
     var inverseMap = {};
     for (var index in expressionArray) {
         let element = expressionArray[index];
-        if (!unmappedVariableRegex.test(element)) {
+        if (!UNMAPPED_VARIABLE_REGEX.test(element)) {
             var currentMappedChar = charMap[element];
             if (currentMappedChar == null) {
                 var currentChar = charGenerator.currentChar;
@@ -55,7 +55,7 @@ exports.unstandardizeExpression = function(expression, inverseMap) {
     let expressionArray = expression.split('');
     for (var index in expressionArray) {
         let element = expressionArray[index];
-        if (!unmappedVariableRegex.test(element)) {
+        if (!UNMAPPED_VARIABLE_REGEX.test(element)) {
             expressionArray[index] = inverseMap[element];
         }
     }
